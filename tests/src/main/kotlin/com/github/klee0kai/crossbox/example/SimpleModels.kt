@@ -8,10 +8,22 @@ import com.github.klee0kai.crossbox.core.Crossbox
     changes = true,
 )
 class SimpleModel(
-    val name: String = "",
-    val number: Number = 0,
-    val long: Long = 0L,
-    val short: Short = 0,
+    val name: String? = null,
+    val number: Number? = null,
+    val long: Long? = null,
+    val short: Short? = null,
+) {
+    companion object;
+}
+
+@Crossbox(
+    fieldList = true,
+    merge = true,
+    changes = true,
+)
+class DeepMergeSimpleModel(
+    val long: Long? = null,
+    val simpleModel: SimpleModel? = null,
 ) {
     companion object;
 }

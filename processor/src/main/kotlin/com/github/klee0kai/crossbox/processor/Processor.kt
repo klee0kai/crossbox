@@ -47,81 +47,118 @@ class Processor(
                     ?.parameters ?: return@launch
                 val crossboxAnn = classDeclaration.getAnnotationsByType(Crossbox::class).firstOrNull() ?: return@launch
 
-                codeGenerator.genKtFile(
-                    // https://kotlinlang.org/docs/ksp-incremental.html
-                    dependencies = Dependencies(aggregating = false, fileOwner),
-                    packageName = "${fileOwner.packageName.asString()}.crossbox",
-                    fileName = "${classDeclaration.simpleName.getShortName()}CrossboxExt"
-                ) {
-                    genLibComment()
+                runCatching {
+                    codeGenerator.genKtFile(
+                        // https://kotlinlang.org/docs/ksp-incremental.html
+                        dependencies = Dependencies(aggregating = false, fileOwner),
+                        packageName = "${fileOwner.packageName.asString()}.crossbox",
+                        fileName = "${classDeclaration.simpleName.getShortName()}CrossboxExt"
+                    ) {
+                        genLibComment()
 
-                    if (crossboxAnn.fieldList) {
-                        genProperty(
-                            name = "fieldList",
-                            type = List::class.asClassName()
-                                .parameterizedBy(FieldInfo::class.asTypeName()),
-                        ) {
-                            receiver(classDeclaration.toClassName().nestedClass("Companion"))
-                            genGetter {
-                                addCode("return listOf(\n")
+                        if (crossboxAnn.fieldList) {
+                            genProperty(
+                                name = "fieldList",
+                                type = List::class.asClassName()
+                                    .parameterizedBy(FieldInfo::class.asTypeName()),
+                            ) {
+                                receiver(classDeclaration.toClassName().nestedClass("Companion"))
+                                genGetter {
+                                    addCode("return listOf(\n")
+                                    primaryConstructorTypes
+                                        .forEach { prop ->
+                                            addCode(
+                                                "%T( %S , %T::class ),\n",
+                                                FieldInfo::class.asTypeName(),
+                                                prop.name?.asString(),
+                                                prop.type.resolve().toClassName().copy(nullable = false),
+                                            )
+                                        }
+                                    addCode(")")
+                                }
+                            }
+                        }
+
+                        if (crossboxAnn.merge) {
+                            genFun(name = "merge") {
+                                receiver(classDeclaration.toClassName())
+                                returns(classDeclaration.toClassName())
+                                addParameter("pair", classDeclaration.toClassName().copy(nullable = true))
+                                addCode("return %T(\n", classDeclaration.toClassName())
                                 primaryConstructorTypes
                                     .forEach { prop ->
                                         addCode(
-                                            "%T( %S , %T::class ),\n",
-                                            FieldInfo::class.asTypeName(),
+                                            " %L ?: pair?.%L,\n",
                                             prop.name?.asString(),
-                                            prop.type.resolve().toClassName(),
+                                            prop.name?.asString()
                                         )
                                     }
                                 addCode(")")
                             }
-                        }
-                    }
 
-                    if (crossboxAnn.merge) {
-                        genFun(name = "merge") {
-                            receiver(classDeclaration.toClassName())
-                            returns(classDeclaration.toClassName())
-                            addParameter("pair", classDeclaration.toClassName())
-
-                        }
-                    }
-
-                    if (crossboxAnn.changes) {
-                        genFun(name = "changes") {
-                            receiver(classDeclaration.toClassName())
-                            addParameter("changed", classDeclaration.toClassName())
+                            genFun(name = "deepMerge") {
+                                receiver(classDeclaration.toClassName())
+                                returns(classDeclaration.toClassName())
+                                addParameter("pair", classDeclaration.toClassName().copy(nullable = true))
+                            addCode("return %T(\n", classDeclaration.toClassName())
                             primaryConstructorTypes
                                 .forEach { prop ->
-                                    val lambdaName = "${prop.name?.asString()}Changed"
-                                    addParameter(
-                                        ParameterSpec.builder(
-                                            name = lambdaName,
-                                            type = LambdaTypeName.get(null, emptyList(), UNIT).copy(nullable = true)
-                                        ).defaultValue("null").build()
-                                    )
-
-                                    beginControlFlow(
-                                        "if (%L != null && %L != changed.%L ) ",
-                                        lambdaName,
-                                        prop.name?.asString() ?: "",
-                                        prop.name?.asString() ?: ""
-                                    )
-                                    addCode("%L()", lambdaName)
-
-                                    endControlFlow()
+                                    val propAnn = prop.type.resolve().declaration.getAnnotationsByType(Crossbox::class).firstOrNull()
+                                    if (propAnn?.merge == true) {
+                                        addCode(
+                                            " %L.deepMerge( pair?.%L ) ?: pair?.%L,\n",
+                                            prop.name?.asString(),
+                                            prop.name?.asString(),
+                                            prop.name?.asString(),
+                                        )
+                                    } else {
+                                        addCode(
+                                            " %L ?: pair?.%L,\n",
+                                            prop.name?.asString(),
+                                            prop.name?.asString()
+                                        )
+                                    }
                                 }
-
-
-                            classDeclaration
-                                .getAllProperties()
-                                .forEach { prop ->
-
-                                }
-
+                            addCode(")")
+                            }
                         }
-                    }
 
+                        if (crossboxAnn.changes) {
+                            genFun(name = "changes") {
+                                receiver(classDeclaration.toClassName())
+                                addParameter("changed", classDeclaration.toClassName())
+                                primaryConstructorTypes
+                                    .forEach { prop ->
+                                        val lambdaName = "${prop.name?.asString()}Changed"
+                                        addParameter(
+                                            ParameterSpec.builder(
+                                                name = lambdaName,
+                                                type = LambdaTypeName.get(null, emptyList(), UNIT).copy(nullable = true)
+                                            ).defaultValue("null").build()
+                                        )
+
+                                        beginControlFlow(
+                                            "if (%L != null && %L != changed.%L ) ",
+                                            lambdaName,
+                                            prop.name?.asString() ?: "",
+                                            prop.name?.asString() ?: ""
+                                        )
+                                        addCode("%L()", lambdaName)
+
+                                        endControlFlow()
+                                    }
+
+
+                                classDeclaration
+                                    .getAllProperties()
+                                    .forEach { prop ->
+
+                                    }
+
+                            }
+                        }
+
+                    }
                 }
             }
         }
