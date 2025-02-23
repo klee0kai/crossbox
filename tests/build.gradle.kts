@@ -7,18 +7,23 @@ group = "com.klee0kai.crossbox.tests"
 version = "1.0-SNAPSHOT"
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
+
 }
 
 ksp {
     logger.isEnabled(LogLevel.DEBUG)
 }
 
+tasks.getByName<Test>("test") {
+    useJUnitPlatform()
+}
+
+
 dependencies {
     implementation(project(":core"))
     ksp(project(":processor"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }

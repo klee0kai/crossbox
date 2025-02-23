@@ -17,8 +17,9 @@ dependencyResolutionManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0" apply false
-    id("com.google.devtools.ksp") version "1.8.0-1.0.8" apply false
+//    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0" apply false
+    id("com.google.devtools.ksp") version "2.1.10-1.0.30" apply false
+    kotlin("jvm") version "2.1.10" apply false
 }
 
 rootProject.name = "crossbox"
