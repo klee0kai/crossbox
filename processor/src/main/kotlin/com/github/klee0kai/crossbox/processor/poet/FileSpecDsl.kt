@@ -1,27 +1,19 @@
 package com.github.klee0kai.crossbox.processor.poet
 
-import com.google.devtools.ksp.processing.CodeGenerator
-import com.google.devtools.ksp.processing.Dependencies
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ksp.writeTo
 
 @DslMarker
 annotation class FileSpecDsl
 
 @FileSpecDsl
-fun CodeGenerator.genKtFile(
-    dependencies: Dependencies,
+fun genFileSpec(
     packageName: String,
     fileName: String,
     block: FileSpec.Builder.() -> Unit,
-) {
-    FileSpec.builder(packageName, fileName)
+): FileSpec {
+    return FileSpec.builder(packageName, fileName)
         .also(block)
         .build()
-        .writeTo(
-            codeGenerator = this,
-            dependencies = dependencies,
-        )
 }
 
 @FileSpecDsl
