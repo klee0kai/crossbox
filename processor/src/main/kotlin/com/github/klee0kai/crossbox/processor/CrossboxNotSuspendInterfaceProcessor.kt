@@ -47,6 +47,9 @@ class CrossboxNotSuspendInterfaceProcessor : TargetFileProcessor {
         val fileOwner = validSymbol.containingFile ?: return null
         val classDeclaration = validSymbol as? KSClassDeclaration ?: return null
 
+        val suspendNotInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
+            .firstOrNull() ?: return null
+
         val crossboxGenInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
             .firstOrNull()
 
@@ -60,43 +63,46 @@ class CrossboxNotSuspendInterfaceProcessor : TargetFileProcessor {
             "${classDeclaration.simpleName.getShortName()}NotSuspend"
         )
         val fileSpec = genFileSpec(genClassName.packageName, genClassName.simpleName) {
-            addFileComment("NotSuspend ${genClassName.simpleName} by Crossbox Library\n")
-
-//            genLibComment()
+            genLibComment()
 
             genInterface(genClassName) {
-                classDeclaration.getDeclaredProperties()
-                    .filter { it.isPublic() }
-                    .forEach { property ->
-                        genProperty(
-                            property.simpleName.asString(),
-                            property.type.resolve().toClassName(),
-                        ) {
-                            mutable(property.isMutable)
-                        }
-                    }
 
-                classDeclaration
-                    .getDeclaredFunctions()
-                    .filter { !it.isConstructor() && it.isPublic() }
-                    .forEach { function ->
-                        genFun(function.simpleName.asString()) {
-                            addModifiers(KModifier.ABSTRACT)
-                            function.returnType?.resolve()?.toClassName()?.let { returns(it) }
-                            function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
-
-                            function.parameters.forEach { param ->
-                                addParameter(
-                                    ParameterSpec.builder(
-                                        name = param.name?.asString() ?: "",
-                                        type = param.type.resolve().toTypeName(),
-                                    ).apply {
-                                        if (param.isVararg) addModifiers(KModifier.VARARG)
-                                    }.build()
-                                )
+                if (suspendNotInterfaceAnn.genProperties) {
+                    classDeclaration.getDeclaredProperties()
+                        .filter { it.isPublic() }
+                        .forEach { property ->
+                            genProperty(
+                                property.simpleName.asString(),
+                                property.type.resolve().toClassName(),
+                            ) {
+                                mutable(property.isMutable)
                             }
                         }
-                    }
+                }
+
+                if (suspendNotInterfaceAnn.genFunctions) {
+                    classDeclaration
+                        .getDeclaredFunctions()
+                        .filter { !it.isConstructor() && it.isPublic() }
+                        .forEach { function ->
+                            genFun(function.simpleName.asString()) {
+                                addModifiers(KModifier.ABSTRACT)
+                                function.returnType?.resolve()?.toClassName()?.let { returns(it) }
+                                function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
+
+                                function.parameters.forEach { param ->
+                                    addParameter(
+                                        ParameterSpec.builder(
+                                            name = param.name?.asString() ?: "",
+                                            type = param.type.resolve().toTypeName(),
+                                        ).apply {
+                                            if (param.isVararg) addModifiers(KModifier.VARARG)
+                                        }.build()
+                                    )
+                                }
+                            }
+                        }
+                }
             }
         }
 

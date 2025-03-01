@@ -51,6 +51,9 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
         val fileOwner = validSymbol.containingFile ?: return null
         val classDeclaration = validSymbol as? KSClassDeclaration ?: return null
 
+        val crossboxGenInterfaceInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
+            .firstOrNull() ?: return null
+
         val crossboxNotSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
             .firstOrNull()
 
@@ -65,9 +68,7 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
             "I${classDeclaration.simpleName.getShortName()}"
         )
         val fileSpec = genFileSpec(genClassName.packageName, genClassName.simpleName) {
-            addFileComment("genInter ${genClassName.simpleName} by Crossbox Library\n")
-
-//            genLibComment()
+            genLibComment()
 
             genInterface(genClassName) {
                 if (crossboxSuspendInterfaceAnn != null)
@@ -77,42 +78,46 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
                 if (crossboxProxyClassInterfaceAnn != null)
                     addAnnotation(CrossboxProxyClass::class)
 
-                classDeclaration.getDeclaredProperties()
-                    .filter { it.isPublic() }
-                    .forEach { property ->
-                        genProperty(
-                            property.simpleName.asString(),
-                            property.type.resolve().toClassName(),
-                        ) {
-                            mutable(property.isMutable)
-                        }
-                    }
-
-                classDeclaration
-                    .getDeclaredFunctions()
-                    .filter { !it.isConstructor() && it.isPublic() }
-                    .forEach { function ->
-                        genFun(function.simpleName.asString()) {
-                            addModifiers(KModifier.ABSTRACT)
-                            function.returnType?.resolve()?.toClassName()?.let { returns(it) }
-                            function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
-
-                            if (function.modifiers.contains(Modifier.SUSPEND)) {
-                                addModifiers(KModifier.SUSPEND)
-                            }
-
-                            function.parameters.forEach { param ->
-                                addParameter(
-                                    ParameterSpec.builder(
-                                        name = param.name?.asString() ?: "",
-                                        type = param.type.resolve().toTypeName(),
-                                    ).apply {
-                                        if (param.isVararg) addModifiers(KModifier.VARARG)
-                                    }.build()
-                                )
+                if (crossboxGenInterfaceInterfaceAnn.genProperties) {
+                    classDeclaration.getDeclaredProperties()
+                        .filter { it.isPublic() }
+                        .forEach { property ->
+                            genProperty(
+                                property.simpleName.asString(),
+                                property.type.resolve().toClassName(),
+                            ) {
+                                mutable(property.isMutable)
                             }
                         }
-                    }
+                }
+
+                if (crossboxGenInterfaceInterfaceAnn.genFunctions) {
+                    classDeclaration
+                        .getDeclaredFunctions()
+                        .filter { !it.isConstructor() && it.isPublic() }
+                        .forEach { function ->
+                            genFun(function.simpleName.asString()) {
+                                addModifiers(KModifier.ABSTRACT)
+                                function.returnType?.resolve()?.toClassName()?.let { returns(it) }
+                                function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
+
+                                if (function.modifiers.contains(Modifier.SUSPEND)) {
+                                    addModifiers(KModifier.SUSPEND)
+                                }
+
+                                function.parameters.forEach { param ->
+                                    addParameter(
+                                        ParameterSpec.builder(
+                                            name = param.name?.asString() ?: "",
+                                            type = param.type.resolve().toTypeName(),
+                                        ).apply {
+                                            if (param.isVararg) addModifiers(KModifier.VARARG)
+                                        }.build()
+                                    )
+                                }
+                            }
+                        }
+                }
             }
         }
 

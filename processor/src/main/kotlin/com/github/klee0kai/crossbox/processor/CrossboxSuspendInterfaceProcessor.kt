@@ -47,6 +47,9 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
         val fileOwner = validSymbol.containingFile ?: return null
         val classDeclaration = validSymbol as? KSClassDeclaration ?: return null
 
+        val suspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxSuspendInterface::class)
+            .firstOrNull() ?: return null
+
         val crossboxGenInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
             .firstOrNull()
 
@@ -63,40 +66,45 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
             genLibComment()
 
             genInterface(genClassName) {
-                classDeclaration.getDeclaredProperties()
-                    .filter { it.isPublic() }
-                    .forEach { property ->
-                        genProperty(
-                            property.simpleName.asString(),
-                            property.type.resolve().toClassName(),
-                        ) {
-                            mutable(property.isMutable)
-                        }
-                    }
-
-                classDeclaration
-                    .getDeclaredFunctions()
-                    .filter { !it.isConstructor() && it.isPublic() }
-                    .forEach { function ->
-                        genFun(function.simpleName.asString()) {
-                            addModifiers(KModifier.ABSTRACT)
-                            addModifiers(KModifier.SUSPEND)
-                            function.returnType?.resolve()?.toClassName()?.let { returns(it) }
-                            function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
-
-                            function.parameters.forEach { param ->
-                                addParameter(
-                                    ParameterSpec.builder(
-                                        name = param.name?.asString() ?: "",
-                                        type = param.type.resolve().toTypeName(),
-                                    ).apply {
-                                        if (param.isVararg) addModifiers(KModifier.VARARG)
-                                    }.build()
-                                )
+                if (suspendInterfaceAnn.genProperties) {
+                    classDeclaration.getDeclaredProperties()
+                        .filter { it.isPublic() }
+                        .forEach { property ->
+                            genProperty(
+                                property.simpleName.asString(),
+                                property.type.resolve().toClassName(),
+                            ) {
+                                mutable(property.isMutable)
                             }
                         }
-                    }
+                }
+
+                if (suspendInterfaceAnn.genFunctions) {
+                    classDeclaration
+                        .getDeclaredFunctions()
+                        .filter { !it.isConstructor() && it.isPublic() }
+                        .forEach { function ->
+                            genFun(function.simpleName.asString()) {
+                                addModifiers(KModifier.ABSTRACT)
+                                addModifiers(KModifier.SUSPEND)
+                                function.returnType?.resolve()?.toClassName()?.let { returns(it) }
+                                function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
+
+                                function.parameters.forEach { param ->
+                                    addParameter(
+                                        ParameterSpec.builder(
+                                            name = param.name?.asString() ?: "",
+                                            type = param.type.resolve().toTypeName(),
+                                        ).apply {
+                                            if (param.isVararg) addModifiers(KModifier.VARARG)
+                                        }.build()
+                                    )
+                                }
+                            }
+                        }
+                }
             }
+
         }
 
         return GenSpec(
