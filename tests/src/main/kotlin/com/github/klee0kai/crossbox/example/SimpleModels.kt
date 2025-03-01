@@ -1,8 +1,8 @@
 package com.github.klee0kai.crossbox.example
 
-import com.github.klee0kai.crossbox.core.Crossbox
+import com.github.klee0kai.crossbox.core.CrossboxModel
 
-@Crossbox(
+@CrossboxModel(
     fieldList = true,
     merge = true,
     changes = true,
@@ -16,7 +16,7 @@ class SimpleModel(
     companion object;
 }
 
-@Crossbox(
+@CrossboxModel(
     fieldList = true,
     merge = true,
     changes = true,

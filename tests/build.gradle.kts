@@ -6,11 +6,6 @@ plugins {
 group = "com.klee0kai.crossbox.tests"
 version = "1.0-SNAPSHOT"
 
-kotlin {
-    jvmToolchain(21)
-
-}
-
 ksp {
     logger.isEnabled(LogLevel.DEBUG)
 }

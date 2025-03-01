@@ -2,7 +2,7 @@
 
 package com.github.klee0kai.crossbox.processor
 
-import com.github.klee0kai.crossbox.core.Crossbox
+import com.github.klee0kai.crossbox.core.CrossboxModel
 import com.github.klee0kai.crossbox.core.FieldInfo
 import com.github.klee0kai.crossbox.processor.ksp.GenSpec
 import com.github.klee0kai.crossbox.processor.poet.*
@@ -36,7 +36,7 @@ class Processor(
         resolver: Resolver
     ): List<KSAnnotated> = runBlocking {
         val annotatedSymbols = resolver
-            .getSymbolsWithAnnotation(Crossbox::class.asClassName().canonicalName)
+            .getSymbolsWithAnnotation(CrossboxModel::class.asClassName().canonicalName)
             .groupBy { it.validate() }
 
         val validSymbols = annotatedSymbols[true].orEmpty()
@@ -48,7 +48,7 @@ class Processor(
                 val classDeclaration = validSymbol as? KSClassDeclaration ?: return@async null
                 val primaryConstructorTypes = classDeclaration.primaryConstructor
                     ?.parameters ?: return@async null
-                val crossboxAnn = classDeclaration.getAnnotationsByType(Crossbox::class)
+                val crossboxModelAnn = classDeclaration.getAnnotationsByType(CrossboxModel::class)
                     .firstOrNull() ?: return@async null
 
                 val fileSpec = genFileSpec(
@@ -57,7 +57,7 @@ class Processor(
                 ) {
                     genLibComment()
 
-                    if (crossboxAnn.fieldList) {
+                    if (crossboxModelAnn.fieldList) {
                         genProperty(
                             name = "fieldList",
                             type = List::class.asClassName()
@@ -80,7 +80,7 @@ class Processor(
                         }
                     }
 
-                    if (crossboxAnn.merge) {
+                    if (crossboxModelAnn.merge) {
                         genFun(name = "merge") {
                             receiver(classDeclaration.toClassName())
                             returns(classDeclaration.toClassName())
@@ -105,7 +105,7 @@ class Processor(
                             primaryConstructorTypes
                                 .forEach { prop ->
                                     val propAnn =
-                                        prop.type.resolve().declaration.getAnnotationsByType(Crossbox::class)
+                                        prop.type.resolve().declaration.getAnnotationsByType(CrossboxModel::class)
                                             .firstOrNull()
                                     if (propAnn?.merge == true) {
                                         addCode(
@@ -126,7 +126,7 @@ class Processor(
                         }
                     }
 
-                    if (crossboxAnn.changes) {
+                    if (crossboxModelAnn.changes) {
                         genFun(name = "changes") {
                             receiver(classDeclaration.toClassName())
                             addParameter("changed", classDeclaration.toClassName())

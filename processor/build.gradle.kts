@@ -5,10 +5,6 @@ plugins {
 group = "com.klee0kai.crossbox.processor"
 version = "1.0-SNAPSHOT"
 
-kotlin {
-    jvmToolchain(21)
-}
-
 dependencies {
     implementation(project(":core"))
 
