@@ -30,8 +30,10 @@ class Processor(
     }
 
     val targetProcessors = arrayOf<TargetFileProcessor>(
-        CrossboxModelProcessor(),
         CrossboxGenInterfaceProcessor(),
+        CrossboxModelProcessor(),
+        CrossboxNotSuspendInterfaceProcessor(),
+        CrossboxSuspendInterfaceProcessor(),
     )
 
     override fun process(
@@ -55,7 +57,13 @@ class Processor(
 
                 val symbolsForReprocessing = (symbols.symbolsForReprocessing
                         + symbols.symbolsForProcessing.drop(takeSymbolsCount))
+                    .toSet().toMutableSet()
                 val symbolsForProcessing = symbols.symbolsForProcessing.take(takeSymbolsCount)
+                    .toSet().toMutableSet()
+
+                val forceProcessing = symbolsForReprocessing.filter { it in globalSymbolsForProcessing }.toSet()
+                symbolsForProcessing += forceProcessing
+                symbolsForReprocessing -= forceProcessing
 
                 globalSymbolsForReprocessing.addAll(symbolsForReprocessing)
                 globalSymbolsForProcessing.addAll(symbolsForProcessing)

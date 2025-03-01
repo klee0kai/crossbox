@@ -3,8 +3,6 @@
 package com.github.klee0kai.crossbox.processor
 
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
-import com.github.klee0kai.crossbox.core.CrossboxNotSuspendInterface
-import com.github.klee0kai.crossbox.core.CrossboxProxyClass
 import com.github.klee0kai.crossbox.core.CrossboxSuspendInterface
 import com.github.klee0kai.crossbox.processor.ksp.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
@@ -16,7 +14,6 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
@@ -24,20 +21,19 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 
-class CrossboxGenInterfaceProcessor : TargetFileProcessor {
+class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,
     ): SymbolsToProcess {
 
-        // Generate an interface on which the class itself can depend.
-        // Validation will never pass at this stage
+        val annotatedSymbols = resolver
+            .getSymbolsWithAnnotation(CrossboxSuspendInterface::class.asClassName().canonicalName)
+            .groupBy { it.validate() }
 
         return SymbolsToProcess(
-            symbolsForProcessing = resolver
-                .getSymbolsWithAnnotation(CrossboxGenInterface::class.asClassName().canonicalName)
-                .toList(),
-            symbolsForReprocessing = emptyList(),
+            symbolsForProcessing = annotatedSymbols[true].orEmpty(),
+            symbolsForReprocessing = annotatedSymbols[false].orEmpty(),
         )
 
     }
@@ -51,32 +47,22 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
         val fileOwner = validSymbol.containingFile ?: return null
         val classDeclaration = validSymbol as? KSClassDeclaration ?: return null
 
-        val crossboxNotSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
+        val crossboxGenInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
             .firstOrNull()
 
-        val crossboxProxyClassInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxProxyClass::class)
-            .firstOrNull()
-
-        val crossboxSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxSuspendInterface::class)
-            .firstOrNull()
+        if (crossboxGenInterfaceAnn != null) {
+            // Processing the annotation of the generated interface
+            return null
+        }
 
         val genClassName = ClassName(
             fileOwner.packageName.asString().crossboxPackageName,
-            "I${classDeclaration.simpleName.getShortName()}"
+            "${classDeclaration.simpleName.getShortName()}Suspend"
         )
         val fileSpec = genFileSpec(genClassName.packageName, genClassName.simpleName) {
-            addFileComment("genInter ${genClassName.simpleName} by Crossbox Library\n")
-
-//            genLibComment()
+            genLibComment()
 
             genInterface(genClassName) {
-                if (crossboxSuspendInterfaceAnn != null)
-                    addAnnotation(CrossboxSuspendInterface::class)
-                if (crossboxNotSuspendInterfaceAnn != null)
-                    addAnnotation(CrossboxNotSuspendInterface::class)
-                if (crossboxProxyClassInterfaceAnn != null)
-                    addAnnotation(CrossboxProxyClass::class)
-
                 classDeclaration.getDeclaredProperties()
                     .filter { it.isPublic() }
                     .forEach { property ->
@@ -94,12 +80,9 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
                     .forEach { function ->
                         genFun(function.simpleName.asString()) {
                             addModifiers(KModifier.ABSTRACT)
+                            addModifiers(KModifier.SUSPEND)
                             function.returnType?.resolve()?.toClassName()?.let { returns(it) }
                             function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
-
-                            if (function.modifiers.contains(Modifier.SUSPEND)) {
-                                addModifiers(KModifier.SUSPEND)
-                            }
 
                             function.parameters.forEach { param ->
                                 addParameter(

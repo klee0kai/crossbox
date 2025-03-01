@@ -52,7 +52,7 @@ class CrossboxModelProcessor : TargetFileProcessor {
             .firstOrNull() ?: return null
 
         val fileSpec = genFileSpec(
-            packageName = "${fileOwner.packageName.asString()}.crossbox",
+            packageName = fileOwner.packageName.asString().crossboxPackageName,
             fileName = "${classDeclaration.simpleName.getShortName()}CrossboxExt"
         ) {
             genLibComment()
