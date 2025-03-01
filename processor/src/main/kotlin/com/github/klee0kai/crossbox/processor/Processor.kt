@@ -27,7 +27,8 @@ class Processor(
     }
 
     val targetProcessors = arrayOf<TargetFileProcessor>(
-        CrossboxModelProcessor()
+        CrossboxModelProcessor(),
+        CrossboxGenInterfaceProcessor(),
     )
 
     override fun process(

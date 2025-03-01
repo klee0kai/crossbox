@@ -20,9 +20,11 @@ fun TypeSpec.Builder.genProperty(
         }
 }
 
-
 @TypeSpecDsl
-fun TypeSpec.Builder.genClass(className: ClassName, block: TypeSpec.Builder.() -> Unit = {}) {
+fun TypeSpec.Builder.genClass(
+    className: ClassName,
+    block: TypeSpec.Builder.() -> Unit = {},
+) {
     addType(
         TypeSpec.classBuilder(className)
             .apply(block)
@@ -30,9 +32,11 @@ fun TypeSpec.Builder.genClass(className: ClassName, block: TypeSpec.Builder.() -
     )
 }
 
-
 @TypeSpecDsl
-fun TypeSpec.Builder.genObject(className: ClassName, block: TypeSpec.Builder.() -> Unit = {}) {
+fun TypeSpec.Builder.genObject(
+    className: ClassName,
+    block: TypeSpec.Builder.() -> Unit = {},
+) {
     addType(
         TypeSpec.objectBuilder(className)
             .apply(block)
@@ -41,7 +45,10 @@ fun TypeSpec.Builder.genObject(className: ClassName, block: TypeSpec.Builder.() 
 }
 
 @TypeSpecDsl
-fun TypeSpec.Builder.genInterface(className: ClassName, block: TypeSpec.Builder.() -> Unit = {}) {
+fun TypeSpec.Builder.genInterface(
+    className: ClassName,
+    block: TypeSpec.Builder.() -> Unit = {},
+) {
     addType(
         TypeSpec.interfaceBuilder(className)
             .apply(block)
@@ -50,7 +57,10 @@ fun TypeSpec.Builder.genInterface(className: ClassName, block: TypeSpec.Builder.
 }
 
 @TypeSpecDsl
-fun TypeSpec.Builder.getFunction(name: String, block: FunSpec.Builder.() -> Unit = {}) {
+fun TypeSpec.Builder.genFun(
+    name: String,
+    block: FunSpec.Builder.() -> Unit = {},
+) {
     addFunction(
         FunSpec.builder(name)
             .apply(block)
@@ -59,7 +69,9 @@ fun TypeSpec.Builder.getFunction(name: String, block: FunSpec.Builder.() -> Unit
 }
 
 @TypeSpecDsl
-fun TypeSpec.Builder.genPrimaryConstructor(block: FunSpec.Builder.() -> Unit = {}) {
+fun TypeSpec.Builder.genPrimaryConstructor(
+    block: FunSpec.Builder.() -> Unit = {},
+) {
     primaryConstructor(
         FunSpec.constructorBuilder()
             .apply(block)
@@ -68,7 +80,9 @@ fun TypeSpec.Builder.genPrimaryConstructor(block: FunSpec.Builder.() -> Unit = {
 }
 
 @TypeSpecDsl
-fun TypeSpec.Builder.genConstructor(block: FunSpec.Builder.() -> Unit = {}) {
+fun TypeSpec.Builder.genConstructor(
+    block: FunSpec.Builder.() -> Unit = {},
+) {
     addFunction(
         FunSpec.constructorBuilder()
             .apply(block)

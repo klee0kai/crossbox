@@ -31,7 +31,10 @@ fun FileSpec.Builder.genProperty(
 }
 
 @FileSpecDsl
-fun FileSpec.Builder.genClass(className: ClassName, block: TypeSpec.Builder.() -> Unit = {}) {
+fun FileSpec.Builder.genClass(
+    className: ClassName,
+    block: TypeSpec.Builder.() -> Unit = {},
+) {
     addType(
         TypeSpec.classBuilder(className)
             .apply(block)
@@ -41,7 +44,10 @@ fun FileSpec.Builder.genClass(className: ClassName, block: TypeSpec.Builder.() -
 
 
 @FileSpecDsl
-fun FileSpec.Builder.genObject(className: ClassName, block: TypeSpec.Builder.() -> Unit = {}) {
+fun FileSpec.Builder.genObject(
+    className: ClassName,
+    block: TypeSpec.Builder.() -> Unit = {},
+) {
     addType(
         TypeSpec.objectBuilder(className)
             .apply(block)
@@ -50,7 +56,10 @@ fun FileSpec.Builder.genObject(className: ClassName, block: TypeSpec.Builder.() 
 }
 
 @FileSpecDsl
-fun FileSpec.Builder.genInterface(className: ClassName, block: TypeSpec.Builder.() -> Unit = {}) {
+fun FileSpec.Builder.genInterface(
+    className: ClassName,
+    block: TypeSpec.Builder.() -> Unit = {},
+) {
     addType(
         TypeSpec.interfaceBuilder(className)
             .apply(block)
