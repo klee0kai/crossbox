@@ -3,6 +3,9 @@
 package com.github.klee0kai.crossbox.processor
 
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
+import com.github.klee0kai.crossbox.core.CrossboxNotSuspendInterface
+import com.github.klee0kai.crossbox.core.CrossboxProxyClass
+import com.github.klee0kai.crossbox.core.CrossboxSuspendInterface
 import com.github.klee0kai.crossbox.processor.ksp.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
@@ -48,6 +51,15 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
         val fileOwner = validSymbol.containingFile ?: return null
         val classDeclaration = validSymbol as? KSClassDeclaration ?: return null
 
+        val crossboxNotSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
+            .firstOrNull()
+
+        val crossboxProxyClassInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxProxyClass::class)
+            .firstOrNull()
+
+        val crossboxSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxSuspendInterface::class)
+            .firstOrNull()
+
         val genClassName = ClassName(
             "${fileOwner.packageName.asString()}.crossbox",
             "I${classDeclaration.simpleName.getShortName()}"
@@ -56,6 +68,13 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
             genLibComment()
 
             genInterface(genClassName) {
+                if (crossboxSuspendInterfaceAnn != null)
+                    addAnnotation(CrossboxSuspendInterface::class)
+                if (crossboxNotSuspendInterfaceAnn != null)
+                    addAnnotation(CrossboxNotSuspendInterface::class)
+                if (crossboxProxyClassInterfaceAnn != null)
+                    addAnnotation(CrossboxProxyClass::class)
+
                 classDeclaration.getDeclaredProperties()
                     .filter { it.isPublic() }
                     .forEach { property ->
