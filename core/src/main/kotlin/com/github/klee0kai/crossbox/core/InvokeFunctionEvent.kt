@@ -17,4 +17,14 @@ interface InvokeFunctionProcessor {
         return null
     }
 
+    /**
+     * Handle the event of the function start and end.
+     * Return the end handler for a specific function
+     */
+    suspend fun startSuspendFunction(
+        event: InvokeFunctionEvent,
+    ): ((InvokeFunctionEvent) -> Unit)? {
+        return null
+    }
+
 }
