@@ -19,6 +19,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 
 class CrossboxModelProcessor : TargetFileProcessor {
@@ -69,10 +70,11 @@ class CrossboxModelProcessor : TargetFileProcessor {
                         primaryConstructorTypes
                             .forEach { prop ->
                                 addCode(
-                                    "%T( %S , %T::class ),\n",
+                                    "%T( %S , %T::class , listOf( %L ) ),\n",
                                     FieldInfo::class.asTypeName(),
                                     prop.name?.asString(),
                                     prop.type.resolve().toClassName().copy(nullable = false),
+                                    prop.annotations.joinToString { it.toAnnotationSpec().toString().removePrefix("@") }
                                 )
                             }
                         addCode(")")
