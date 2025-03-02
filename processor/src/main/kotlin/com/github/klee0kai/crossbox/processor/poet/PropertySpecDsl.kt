@@ -27,6 +27,6 @@ fun PropertySpec.Builder.genSetter(
         .apply(block)
         .build()
         .also {
-            getter(it)
+            setter(it)
         }
 }

@@ -34,6 +34,7 @@ class Processor(
         CrossboxModelProcessor(),
         CrossboxNotSuspendInterfaceProcessor(),
         CrossboxSuspendInterfaceProcessor(),
+        CrossboxProxyClassProcessor(),
     )
 
     override fun process(
