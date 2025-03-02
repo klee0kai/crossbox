@@ -1,9 +1,10 @@
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.jvm)
 }
 
 group = "com.klee0kai.crossbox.core"
-version = "1.0-SNAPSHOT"
+version = libs.versions.crossbox.get()
 
 dependencies {
+
 }

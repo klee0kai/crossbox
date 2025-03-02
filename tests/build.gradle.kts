@@ -1,10 +1,10 @@
 plugins {
-    id("com.google.devtools.ksp")
-    kotlin("jvm")
+    alias(libs.plugins.jvm)
+    alias(libs.plugins.ksp)
 }
 
 group = "com.klee0kai.crossbox.tests"
-version = "1.0-SNAPSHOT"
+version = libs.versions.crossbox.get()
 
 ksp {
     logger.isEnabled(LogLevel.DEBUG)
@@ -14,11 +14,10 @@ tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
 
-
 dependencies {
     implementation(project(":core"))
     ksp(project(":processor"))
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testImplementation(libs.jupiter.api)
+    testRuntimeOnly(libs.jupiter.engine)
 }
