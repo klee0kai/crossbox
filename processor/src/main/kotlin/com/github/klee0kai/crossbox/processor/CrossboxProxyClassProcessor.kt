@@ -177,7 +177,12 @@ class CrossboxProxyClassProcessor : TargetFileProcessor {
                                     function.simpleName.asString(),
                                     parameters.joinToString { arg -> arg.name },
                                 )
-                                addStatement("val endProcessor = crossBoxProxyProcessor.startFunction(event)")
+                                if (function.modifiers.contains(Modifier.SUSPEND)) {
+                                    addStatement("val endProcessor = crossBoxProxyProcessor.startSuspendFunction(event)")
+                                } else {
+                                    addStatement("val endProcessor = crossBoxProxyProcessor.startFunction(event)")
+                                }
+
                                 beginControlFlow("try")
                                 beginControlFlow("with (crossboxOrigin)")
                                 addStatement(

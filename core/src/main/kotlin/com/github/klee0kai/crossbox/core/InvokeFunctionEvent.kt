@@ -23,7 +23,7 @@ interface InvokeFunctionProcessor {
      */
     suspend fun startSuspendFunction(
         event: InvokeFunctionEvent,
-    ): ((InvokeFunctionEvent) -> Unit)? {
+    ): (suspend (InvokeFunctionEvent) -> Unit)? {
         return null
     }
 

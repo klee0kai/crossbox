@@ -9,5 +9,5 @@ group = "com.github.klee0kai.crossbox.core"
 version = libs.versions.crossbox.get()
 
 dependencies {
-
+    implementation(libs.bundles.kotlin)
 }

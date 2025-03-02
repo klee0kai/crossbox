@@ -21,7 +21,7 @@ open class MeasureTimeProxy(
 
     override suspend fun startSuspendFunction(
         event: InvokeFunctionEvent,
-    ): ((InvokeFunctionEvent) -> Unit)? {
+    ): (suspend (InvokeFunctionEvent) -> Unit)? {
         val start = System.nanoTime()
         return {
             val end = System.nanoTime()
