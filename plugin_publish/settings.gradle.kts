@@ -3,7 +3,6 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        maven(url = "https://jitpack.io")
     }
 }
 
@@ -12,19 +11,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven(url = "https://jitpack.io")
     }
     versionCatalogs {
         create("libs") {
-            from(files("libs.versions.toml"))
+            from(files("../libs.versions.toml"))
         }
     }
 }
-
-rootProject.name = "crossbox"
-
-includeBuild("plugin_publish")
-include("core")
-include("processor")
-include("tests")
-
