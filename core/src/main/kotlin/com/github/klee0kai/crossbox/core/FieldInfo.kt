@@ -5,4 +5,5 @@ import kotlin.reflect.KClass
 data class FieldInfo(
     val name: String,
     val kclass: KClass<*>,
+    val annotations: List<Any> = emptyList(),
 )
