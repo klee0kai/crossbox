@@ -5,6 +5,7 @@ import com.github.klee0kai.crossbox.processor.ksp.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
 import com.github.klee0kai.crossbox.processor.ksp.forceProcess
 import com.github.klee0kai.crossbox.processor.ksp.takeOnly
+import com.github.klee0kai.crossbox.processor.target.*
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -37,8 +38,8 @@ class Processor(
     val targetProcessors = arrayOf<TargetFileProcessor>(
         CrossboxGenInterfaceProcessor(),
         CrossboxModelProcessor(),
-        CrossboxNotSuspendInterfaceProcessor(),
         CrossboxSuspendInterfaceProcessor(),
+        CrossboxNotSuspendInterfaceProcessor(),
         CrossboxProxyClassProcessor(),
     )
 

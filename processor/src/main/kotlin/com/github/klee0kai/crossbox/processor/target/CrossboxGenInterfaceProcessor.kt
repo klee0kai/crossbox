@@ -1,9 +1,11 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor
+package com.github.klee0kai.crossbox.processor.target
 
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
 import com.github.klee0kai.crossbox.core.CrossboxNotSuspendInterface
+import com.github.klee0kai.crossbox.core.CrossboxProxyClass
+import com.github.klee0kai.crossbox.core.CrossboxSuspendInterface
 import com.github.klee0kai.crossbox.processor.ksp.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
@@ -14,6 +16,7 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
@@ -21,19 +24,20 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 
-class CrossboxNotSuspendInterfaceProcessor : TargetFileProcessor {
+class CrossboxGenInterfaceProcessor : TargetFileProcessor {
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,
     ): SymbolsToProcess {
 
-        val annotatedSymbols = resolver
-            .getSymbolsWithAnnotation(CrossboxNotSuspendInterface::class.asClassName().canonicalName)
-            .groupBy { it.validate() }
+        // Generate an interface on which the class itself can depend.
+        // Validation will never pass at this stage
 
         return SymbolsToProcess(
-            symbolsForProcessing = annotatedSymbols[true].orEmpty(),
-            symbolsForReprocessing = annotatedSymbols[false].orEmpty(),
+            symbolsForProcessing = resolver
+                .getSymbolsWithAnnotation(CrossboxGenInterface::class.asClassName().canonicalName)
+                .toList(),
+            symbolsForReprocessing = emptyList(),
         )
 
     }
@@ -47,27 +51,34 @@ class CrossboxNotSuspendInterfaceProcessor : TargetFileProcessor {
         val fileOwner = validSymbol.containingFile ?: return null
         val classDeclaration = validSymbol as? KSClassDeclaration ?: return null
 
-        val suspendNotInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
+        val crossboxGenInterfaceInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
             .firstOrNull() ?: return null
 
-        val crossboxGenInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
+        val crossboxNotSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
             .firstOrNull()
 
-        if (crossboxGenInterfaceAnn != null) {
-            // Processing the annotation of the generated interface
-            return null
-        }
+        val crossboxProxyClassInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxProxyClass::class)
+            .firstOrNull()
+
+        val crossboxSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxSuspendInterface::class)
+            .firstOrNull()
 
         val genClassName = ClassName(
             fileOwner.packageName.asString().crossboxPackageName,
-            "${classDeclaration.simpleName.getShortName()}NotSuspend"
+            "I${classDeclaration.simpleName.getShortName()}"
         )
         val fileSpec = genFileSpec(genClassName.packageName, genClassName.simpleName) {
             genLibComment()
 
             genInterface(genClassName) {
+                if (crossboxSuspendInterfaceAnn != null)
+                    addAnnotation(CrossboxSuspendInterface::class)
+                if (crossboxNotSuspendInterfaceAnn != null)
+                    addAnnotation(CrossboxNotSuspendInterface::class)
+                if (crossboxProxyClassInterfaceAnn != null)
+                    addAnnotation(CrossboxProxyClass::class)
 
-                if (suspendNotInterfaceAnn.genProperties) {
+                if (crossboxGenInterfaceInterfaceAnn.genProperties) {
                     classDeclaration.getDeclaredProperties()
                         .filter { it.isPublic() }
                         .forEach { property ->
@@ -80,7 +91,7 @@ class CrossboxNotSuspendInterfaceProcessor : TargetFileProcessor {
                         }
                 }
 
-                if (suspendNotInterfaceAnn.genFunctions) {
+                if (crossboxGenInterfaceInterfaceAnn.genFunctions) {
                     classDeclaration
                         .getDeclaredFunctions()
                         .filter { !it.isConstructor() && it.isPublic() }
@@ -89,6 +100,10 @@ class CrossboxNotSuspendInterfaceProcessor : TargetFileProcessor {
                                 addModifiers(KModifier.ABSTRACT)
                                 function.returnType?.resolve()?.toClassName()?.let { returns(it) }
                                 function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
+
+                                if (function.modifiers.contains(Modifier.SUSPEND)) {
+                                    addModifiers(KModifier.SUSPEND)
+                                }
 
                                 function.parameters.forEach { param ->
                                     addParameter(

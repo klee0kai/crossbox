@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor
+package com.github.klee0kai.crossbox.processor.target
 
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
 import com.github.klee0kai.crossbox.core.CrossboxProxyClass

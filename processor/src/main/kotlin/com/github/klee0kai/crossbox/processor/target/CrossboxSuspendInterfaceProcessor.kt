@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor
+package com.github.klee0kai.crossbox.processor.target
 
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
 import com.github.klee0kai.crossbox.core.CrossboxSuspendInterface
@@ -58,14 +58,19 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
             return null
         }
 
-        val genClassName = ClassName(
+        val suspendInterfaceClName = ClassName(
             fileOwner.packageName.asString().crossboxPackageName,
             "${classDeclaration.simpleName.getShortName()}Suspend"
         )
-        val fileSpec = genFileSpec(genClassName.packageName, genClassName.simpleName) {
+
+        val toSuspendAdapterClName = ClassName(
+            fileOwner.packageName.asString().crossboxPackageName,
+            "${classDeclaration.simpleName.getShortName()}ToSuspend"
+        )
+        val fileSpec = genFileSpec(suspendInterfaceClName.packageName, suspendInterfaceClName.simpleName) {
             genLibComment()
 
-            genInterface(genClassName) {
+            genInterface(suspendInterfaceClName) {
                 if (suspendInterfaceAnn.genProperties) {
                     classDeclaration.getDeclaredProperties()
                         .filter { it.isPublic() }
@@ -100,6 +105,88 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
                                         }.build()
                                     )
                                 }
+                            }
+                        }
+                }
+            }
+
+
+
+            genClass(toSuspendAdapterClName) {
+                addModifiers(KModifier.OPEN)
+                addSuperinterface(suspendInterfaceClName)
+
+                genPrimaryConstructor {
+                    addParameter(
+                        name = "crossboxOrigin",
+                        classDeclaration.toClassName()
+                    )
+                }
+
+                genProperty(
+                    name = "crossboxOrigin",
+                    classDeclaration.toClassName(),
+                ) {
+                    initFromConstructor()
+                }
+
+
+                if (suspendInterfaceAnn.genProperties) {
+                    classDeclaration.getDeclaredProperties()
+                        .filter { it.isPublic() }
+                        .forEach { property ->
+                            genProperty(
+                                property.simpleName.asString(),
+                                property.type.resolve().toClassName(),
+                            ) {
+                                addModifiers(KModifier.OVERRIDE)
+
+                                genGetter {
+                                    addStatement("return crossboxOrigin.%L", property.simpleName.asString())
+                                }
+
+                                if (property.isMutable) {
+                                    mutable(property.isMutable)
+                                    genSetter {
+                                        addParameter("newValue", property.type.resolve().toClassName())
+                                        addStatement("crossboxOrigin.%L = newValue", property.simpleName.asString())
+                                    }
+                                }
+                            }
+                        }
+                }
+
+                if (suspendInterfaceAnn.genFunctions) {
+                    classDeclaration
+                        .getDeclaredFunctions()
+                        .filter { !it.isConstructor() && it.isPublic() }
+                        .forEach { function ->
+                            genFun(function.simpleName.asString()) {
+                                addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
+                                function.returnType?.resolve()?.toClassName()?.let { returns(it) }
+                                function.extensionReceiver?.resolve()?.toClassName()?.let { receiver(it) }
+
+                                function.parameters.forEach { param ->
+                                    addParameter(
+                                        ParameterSpec.builder(
+                                            name = param.name?.asString() ?: "",
+                                            type = param.type.resolve().toTypeName(),
+                                        ).apply {
+                                            if (param.isVararg) addModifiers(KModifier.VARARG)
+                                        }.build()
+                                    )
+                                }
+
+                                beginControlFlow("return with (crossboxOrigin)")
+                                addStatement(
+                                    " %L( %L )",
+                                    function.simpleName.asString(),
+                                    parameters.joinToString { arg ->
+                                        if (arg.modifiers.contains(KModifier.VARARG)) "*${arg.name}"
+                                        else arg.name
+                                    },
+                                )
+                                endControlFlow()
                             }
                         }
                 }
