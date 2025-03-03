@@ -1,5 +1,9 @@
 # CrossBox
 
+[![KSP](https://img.shields.io/badge/KSP-2.1.10-blue.svg?logo=kotlin)](https://kotlinlang.org/docs/ksp-overview.html)
+[![Licence](https://img.shields.io/badge/license-GNU_GPLv3-blue.svg?style=flat-square)](./LICENCE.md)
+[![Jitpack](https://jitpack.io/v/klee0kai/crossbox.svg)](https://jitpack.io/#klee0kai/crossbox)
+
 Library for generating auxiliary template methods for models and classes.
 Works on KSP.
 
