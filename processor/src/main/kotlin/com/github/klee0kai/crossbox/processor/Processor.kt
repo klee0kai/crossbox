@@ -39,7 +39,7 @@ class Processor(
         CrossboxGenInterfaceProcessor(),
         CrossboxModelProcessor(),
         CrossboxSuspendInterfaceProcessor(),
-        CrossboxNotSuspendInterfaceProcessor(),
+        CrossboxAsyncInterfaceProcessor(),
         CrossboxProxyClassProcessor(),
     )
 

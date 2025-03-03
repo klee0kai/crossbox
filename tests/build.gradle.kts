@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":core"))
     ksp(project(":processor"))
 
+    implementation(libs.bundles.kotlin)
     testImplementation(libs.jupiter.api)
     testRuntimeOnly(libs.jupiter.engine)
 }

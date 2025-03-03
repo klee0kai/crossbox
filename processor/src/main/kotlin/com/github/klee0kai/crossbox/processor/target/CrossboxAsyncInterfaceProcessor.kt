@@ -3,7 +3,7 @@
 package com.github.klee0kai.crossbox.processor.target
 
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
-import com.github.klee0kai.crossbox.core.CrossboxSuspendInterface
+import com.github.klee0kai.crossbox.core.CrossboxNotSuspendInterface
 import com.github.klee0kai.crossbox.processor.ksp.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
@@ -16,17 +16,21 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
 
-class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
+class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,
     ): SymbolsToProcess {
 
         val annotatedSymbols = resolver
-            .getSymbolsWithAnnotation(CrossboxSuspendInterface::class.asClassName().canonicalName)
+            .getSymbolsWithAnnotation(CrossboxNotSuspendInterface::class.asClassName().canonicalName)
             .groupBy { it.validate() }
 
         return SymbolsToProcess(
@@ -45,7 +49,7 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
         val fileOwner = validSymbol.containingFile ?: return null
         val classDeclaration = validSymbol as? KSClassDeclaration ?: return null
 
-        val suspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxSuspendInterface::class)
+        val notSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
             .firstOrNull() ?: return null
 
         val crossboxGenInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
@@ -56,21 +60,28 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
             return null
         }
 
-        val suspendInterfaceClName = ClassName(
+        val asyncInterfaceClName = ClassName(
             fileOwner.packageName.asString().crossboxPackageName,
-            "${classDeclaration.simpleName.getShortName()}Suspend"
+            "${classDeclaration.simpleName.getShortName()}Async"
         )
 
-        val toSuspendAdapterClName = ClassName(
+        val toAsyncClName = ClassName(
             fileOwner.packageName.asString().crossboxPackageName,
-            "${classDeclaration.simpleName.getShortName()}ToSuspend"
+            "${classDeclaration.simpleName.getShortName()}ToAsync"
         )
 
-        val fileSpec = genFileSpec(suspendInterfaceClName.packageName, suspendInterfaceClName.simpleName) {
+        val fromAsyncClName = ClassName(
+            fileOwner.packageName.asString().crossboxPackageName,
+            "${classDeclaration.simpleName.getShortName()}FromAsync"
+        )
+
+
+        val fileSpec = genFileSpec(asyncInterfaceClName.packageName, asyncInterfaceClName.simpleName) {
             genLibComment()
+            addImport("kotlinx.coroutines", "async", "launch")
 
-            genInterface(suspendInterfaceClName) {
-                if (suspendInterfaceAnn.genProperties) {
+            genInterface(asyncInterfaceClName) {
+                if (notSuspendInterfaceAnn.genProperties) {
                     classDeclaration.getDeclaredProperties()
                         .filter { it.isPublic() }
                         .forEach { property ->
@@ -83,41 +94,42 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
                         }
                 }
 
-                if (suspendInterfaceAnn.genFunctions) {
+                if (notSuspendInterfaceAnn.genFunctions) {
                     classDeclaration
                         .getDeclaredFunctions()
                         .filter { !it.isConstructor() && it.isPublic() }
                         .forEach { function ->
                             genFun(function.simpleName.asString()) {
                                 declareSameParameters(function)
-                                addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
+                                addModifiers(KModifier.ABSTRACT)
+                                val returnType = function.returnType?.resolve()?.toClassName()
+                                if (returnType != null && returnType != Unit::class.asClassName()) {
+                                    returns(Deferred::class.asClassName().parameterizedBy(returnType))
+                                } else {
+                                    returns(Job::class.asClassName())
+                                }
                             }
                         }
                 }
             }
 
 
-
-            genClass(toSuspendAdapterClName) {
+            genClass(toAsyncClName) {
                 addModifiers(KModifier.OPEN)
-                addSuperinterface(suspendInterfaceClName)
+                addSuperinterface(asyncInterfaceClName)
 
                 genPrimaryConstructor {
-                    addParameter(
-                        name = "crossboxOrigin",
-                        classDeclaration.toClassName()
-                    )
+                    addParameter("crossboxOrigin", classDeclaration.toClassName())
+                    addParameter("crossboxScope", CoroutineScope::class.asClassName())
                 }
-
-                genProperty(
-                    name = "crossboxOrigin",
-                    classDeclaration.toClassName(),
-                ) {
+                genProperty(name = "crossboxOrigin", classDeclaration.toClassName()) {
+                    initFromConstructor()
+                }
+                genProperty(name = "crossboxScope", CoroutineScope::class.asClassName()) {
                     initFromConstructor()
                 }
 
-
-                if (suspendInterfaceAnn.genProperties) {
+                if (notSuspendInterfaceAnn.genProperties) {
                     classDeclaration.getDeclaredProperties()
                         .filter { it.isPublic() }
                         .forEach { property ->
@@ -128,18 +140,26 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
                         }
                 }
 
-                if (suspendInterfaceAnn.genFunctions) {
+                if (notSuspendInterfaceAnn.genFunctions) {
                     classDeclaration
                         .getDeclaredFunctions()
                         .filter { !it.isConstructor() && it.isPublic() }
                         .forEach { function ->
                             genFun(function.simpleName.asString()) {
                                 declareSameParameters(function)
-                                addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
+                                addModifiers(KModifier.OVERRIDE)
+                                val returnType = function.returnType?.resolve()?.toClassName()
+                                if (returnType != null && returnType != Unit::class.asClassName()) {
+                                    returns(Deferred::class.asClassName().parameterizedBy(returnType))
+                                    beginControlFlow("return crossboxScope.async")
+                                } else {
+                                    returns(Job::class.asClassName())
+                                    beginControlFlow("return crossboxScope.launch")
+                                }
 
-                                beginControlFlow("return with (crossboxOrigin)")
+                                beginControlFlow("with (crossboxOrigin)")
                                 addStatement(
-                                    " %L( %L )",
+                                    " %L( %L ) ",
                                     function.simpleName.asString(),
                                     parameters.joinToString { arg ->
                                         if (arg.modifiers.contains(KModifier.VARARG)) "*${arg.name}"
@@ -147,10 +167,12 @@ class CrossboxSuspendInterfaceProcessor : TargetFileProcessor {
                                     },
                                 )
                                 endControlFlow()
+                                endControlFlow()
                             }
                         }
                 }
             }
+
 
         }
 
