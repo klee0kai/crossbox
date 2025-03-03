@@ -2,8 +2,8 @@
 
 package com.github.klee0kai.crossbox.processor.target
 
+import com.github.klee0kai.crossbox.core.CrossboxAsyncInterface
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
-import com.github.klee0kai.crossbox.core.CrossboxNotSuspendInterface
 import com.github.klee0kai.crossbox.processor.ksp.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
@@ -15,6 +15,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
@@ -30,7 +31,7 @@ class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
     ): SymbolsToProcess {
 
         val annotatedSymbols = resolver
-            .getSymbolsWithAnnotation(CrossboxNotSuspendInterface::class.asClassName().canonicalName)
+            .getSymbolsWithAnnotation(CrossboxAsyncInterface::class.asClassName().canonicalName)
             .groupBy { it.validate() }
 
         return SymbolsToProcess(
@@ -49,7 +50,7 @@ class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
         val fileOwner = validSymbol.containingFile ?: return null
         val classDeclaration = validSymbol as? KSClassDeclaration ?: return null
 
-        val notSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
+        val asyncInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxAsyncInterface::class)
             .firstOrNull() ?: return null
 
         val crossboxGenInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
@@ -81,7 +82,7 @@ class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
             addImport("kotlinx.coroutines", "async", "launch")
 
             genInterface(asyncInterfaceClName) {
-                if (notSuspendInterfaceAnn.genProperties) {
+                if (asyncInterfaceAnn.genProperties) {
                     classDeclaration.getDeclaredProperties()
                         .filter { it.isPublic() }
                         .forEach { property ->
@@ -94,7 +95,7 @@ class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
                         }
                 }
 
-                if (notSuspendInterfaceAnn.genFunctions) {
+                if (asyncInterfaceAnn.genFunctions) {
                     classDeclaration
                         .getDeclaredFunctions()
                         .filter { !it.isConstructor() && it.isPublic() }
@@ -102,17 +103,11 @@ class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
                             genFun(function.simpleName.asString()) {
                                 declareSameParameters(function)
                                 addModifiers(KModifier.ABSTRACT)
-                                val returnType = function.returnType?.resolve()?.toClassName()
-                                if (returnType != null && returnType != Unit::class.asClassName()) {
-                                    returns(Deferred::class.asClassName().parameterizedBy(returnType))
-                                } else {
-                                    returns(Job::class.asClassName())
-                                }
+                                function.asyncReturnType?.let { returns(it) }
                             }
                         }
                 }
             }
-
 
             genClass(toAsyncClName) {
                 addModifiers(KModifier.OPEN)
@@ -129,7 +124,7 @@ class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
                     initFromConstructor()
                 }
 
-                if (notSuspendInterfaceAnn.genProperties) {
+                if (asyncInterfaceAnn.genProperties) {
                     classDeclaration.getDeclaredProperties()
                         .filter { it.isPublic() }
                         .forEach { property ->
@@ -140,7 +135,7 @@ class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
                         }
                 }
 
-                if (notSuspendInterfaceAnn.genFunctions) {
+                if (asyncInterfaceAnn.genFunctions) {
                     classDeclaration
                         .getDeclaredFunctions()
                         .filter { !it.isConstructor() && it.isPublic() }
@@ -148,26 +143,113 @@ class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
                             genFun(function.simpleName.asString()) {
                                 declareSameParameters(function)
                                 addModifiers(KModifier.OVERRIDE)
-                                val returnType = function.returnType?.resolve()?.toClassName()
-                                if (returnType != null && returnType != Unit::class.asClassName()) {
-                                    returns(Deferred::class.asClassName().parameterizedBy(returnType))
-                                    beginControlFlow("return crossboxScope.async")
-                                } else {
-                                    returns(Job::class.asClassName())
-                                    beginControlFlow("return crossboxScope.launch")
-                                }
+                                val proxyInvokeCode = CodeBlock.builder().apply {
+                                    beginControlFlow("with (crossboxOrigin)")
+                                    addStatement(
+                                        " %L( %L ) ",
+                                        function.simpleName.asString(),
+                                        parameters.joinToString { arg ->
+                                            if (arg.modifiers.contains(KModifier.VARARG)) "*${arg.name}"
+                                            else arg.name
+                                        },
+                                    )
+                                    endControlFlow()
+                                }.build()
 
-                                beginControlFlow("with (crossboxOrigin)")
-                                addStatement(
-                                    " %L( %L ) ",
-                                    function.simpleName.asString(),
-                                    parameters.joinToString { arg ->
-                                        if (arg.modifiers.contains(KModifier.VARARG)) "*${arg.name}"
-                                        else arg.name
-                                    },
-                                )
-                                endControlFlow()
-                                endControlFlow()
+                                val returnType = function.returnType?.resolve()?.toClassName()
+                                when {
+                                    returnType != null && !function.isSuspend -> {
+                                        returns(returnType)
+                                        addCode("return ")
+                                        addCode(proxyInvokeCode)
+                                    }
+
+                                    returnType != null && returnType != Unit::class.asClassName() -> {
+                                        returns(Deferred::class.asClassName().parameterizedBy(returnType))
+                                        beginControlFlow("return crossboxScope.async")
+                                        addCode(proxyInvokeCode)
+                                        endControlFlow()
+                                    }
+
+                                    function.isSuspend -> {
+                                        returns(Job::class.asClassName())
+                                        beginControlFlow("return crossboxScope.launch")
+                                        addCode(proxyInvokeCode)
+                                        endControlFlow()
+                                    }
+                                }
+                            }
+                        }
+                }
+            }
+
+
+
+            genClass(fromAsyncClName) {
+                addModifiers(KModifier.OPEN)
+                addSuperinterface(classDeclaration.toClassName())
+
+                genPrimaryConstructor {
+                    addParameter("crossboxOrigin", asyncInterfaceClName)
+                }
+                genProperty(name = "crossboxOrigin", asyncInterfaceClName) {
+                    initFromConstructor()
+                }
+
+                if (asyncInterfaceAnn.genProperties) {
+                    classDeclaration.getDeclaredProperties()
+                        .filter { it.isPublic() }
+                        .forEach { property ->
+                            genProxyProperty(
+                                originName = "crossboxOrigin",
+                                property = property,
+                            )
+                        }
+                }
+
+                if (asyncInterfaceAnn.genFunctions) {
+                    classDeclaration
+                        .getDeclaredFunctions()
+                        .filter { !it.isConstructor() && it.isPublic() }
+                        .forEach { function ->
+                            genFun(function.simpleName.asString()) {
+                                declareSameParameters(function)
+                                addModifiers(KModifier.OVERRIDE)
+                                if (function.isSuspend) addModifiers(KModifier.SUSPEND)
+
+
+                                val proxyInvokeCode = CodeBlock.builder().apply {
+                                    beginControlFlow("with (crossboxOrigin)")
+                                    addStatement(
+                                        " %L( %L ) ",
+                                        function.simpleName.asString(),
+                                        parameters.joinToString { arg ->
+                                            if (arg.modifiers.contains(KModifier.VARARG)) "*${arg.name}"
+                                            else arg.name
+                                        },
+                                    )
+                                    endControlFlow()
+                                }.build()
+
+                                val returnType = function.returnType?.resolve()?.toClassName()
+                                when {
+                                    returnType != null && !function.isSuspend -> {
+                                        addCode("return ")
+                                        addCode(proxyInvokeCode)
+                                    }
+
+                                    returnType != null && returnType != Unit::class.asClassName() -> {
+                                        addCode("return ")
+                                        addCode(proxyInvokeCode)
+                                        addCode(".await()")
+                                    }
+
+                                    function.isSuspend -> {
+                                        addCode("return ")
+                                        addCode(proxyInvokeCode)
+                                        addCode(".join()")
+                                    }
+                                }
                             }
                         }
                 }

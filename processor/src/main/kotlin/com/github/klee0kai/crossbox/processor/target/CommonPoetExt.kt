@@ -5,12 +5,29 @@ import com.github.klee0kai.crossbox.processor.poet.genProperty
 import com.github.klee0kai.crossbox.processor.poet.genSetter
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.TypeSpec
+import com.google.devtools.ksp.symbol.Modifier
+import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
+
+val KSFunctionDeclaration.isSuspend: Boolean get() = modifiers.contains(Modifier.SUSPEND)
+
+val KSFunctionDeclaration.asyncReturnType: TypeName?
+    get() {
+        val returnType = returnType?.resolve()?.toClassName()
+        return when {
+            returnType != null && !isSuspend -> returnType
+            returnType != null && returnType != Unit::class.asClassName() ->
+                Deferred::class.asClassName().parameterizedBy(returnType)
+
+            isSuspend -> Job::class.asClassName()
+            else -> returnType
+        }
+    }
+
 
 fun TypeSpec.Builder.genProxyProperty(
     originName: String,

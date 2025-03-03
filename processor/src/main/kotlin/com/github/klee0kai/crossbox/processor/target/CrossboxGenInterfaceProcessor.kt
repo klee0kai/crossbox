@@ -2,8 +2,8 @@
 
 package com.github.klee0kai.crossbox.processor.target
 
+import com.github.klee0kai.crossbox.core.CrossboxAsyncInterface
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
-import com.github.klee0kai.crossbox.core.CrossboxNotSuspendInterface
 import com.github.klee0kai.crossbox.core.CrossboxProxyClass
 import com.github.klee0kai.crossbox.core.CrossboxSuspendInterface
 import com.github.klee0kai.crossbox.processor.ksp.GenSpec
@@ -54,7 +54,7 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
         val crossboxGenInterfaceInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxGenInterface::class)
             .firstOrNull() ?: return null
 
-        val crossboxNotSuspendInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxNotSuspendInterface::class)
+        val crossboxAsyncInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxAsyncInterface::class)
             .firstOrNull()
 
         val crossboxProxyClassInterfaceAnn = classDeclaration.getAnnotationsByType(CrossboxProxyClass::class)
@@ -73,8 +73,8 @@ class CrossboxGenInterfaceProcessor : TargetFileProcessor {
             genInterface(genClassName) {
                 if (crossboxSuspendInterfaceAnn != null)
                     addAnnotation(CrossboxSuspendInterface::class)
-                if (crossboxNotSuspendInterfaceAnn != null)
-                    addAnnotation(CrossboxNotSuspendInterface::class)
+                if (crossboxAsyncInterfaceAnn != null)
+                    addAnnotation(CrossboxAsyncInterface::class)
                 if (crossboxProxyClassInterfaceAnn != null)
                     addAnnotation(CrossboxProxyClass::class)
 
