@@ -28,8 +28,8 @@ plugins {
 }
 
 dependencies {
-    implementation("com.github.klee0kai.crossbox:core:0.0.1")
-    ksp("com.github.klee0kai.crossbox:processor:0.0.1")
+    implementation("com.github.klee0kai.crossbox:core:0.0.2")
+    ksp("com.github.klee0kai.crossbox:processor:0.0.2")
 } 
 ```
 
