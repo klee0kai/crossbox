@@ -21,6 +21,7 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toTypeName
 
 class CrossboxModelProcessor : TargetFileProcessor {
 
@@ -73,7 +74,7 @@ class CrossboxModelProcessor : TargetFileProcessor {
                                     "%T( %S , %T::class , listOf( %L ) ),\n",
                                     FieldInfo::class.asTypeName(),
                                     prop.name?.asString(),
-                                    prop.type.resolve().toClassName().copy(nullable = false),
+                                    prop.type.resolve().toTypeName().rawType().copy(nullable = false,),
                                     prop.annotations.joinToString { it.toAnnotationSpec().toString().removePrefix("@") }
                                 )
                             }

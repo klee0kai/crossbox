@@ -21,3 +21,12 @@ data class DeepMergeSimpleModel(
 ) {
     companion object;
 }
+
+@CrossboxModel
+data class DeepRsqlModel(
+    val commonId: Long? = null,
+    val simpleModel: List<SimpleModel>? = null,
+    val tags: List<String>? = null,
+) {
+    companion object;
+}
