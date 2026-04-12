@@ -2,6 +2,7 @@
 
 package com.github.klee0kai.crossbox.processor.target
 
+import com.github.klee0kai.crossbox.core.CrossboxModel
 import com.github.klee0kai.crossbox.core.CrossboxTableSaw
 import com.github.klee0kai.crossbox.processor.ksp.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
@@ -16,6 +17,8 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
@@ -23,6 +26,14 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 
 class CrossboxTableSawProcessor : TargetFileProcessor {
+
+    data class ExpandedProperty(
+        val originalName: String,
+        val columnName: String,
+        val fullPath: String, // For nested access like "address.street"
+        val type: KSType,
+        val isFromNestedModel: Boolean = false,
+    )
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,
@@ -60,11 +71,16 @@ class CrossboxTableSawProcessor : TargetFileProcessor {
             .filter { it.isPublic() }
             .toList()
 
+        // Flatten nested models and handle lists
+        val flatProperties = mutableListOf<ExpandedProperty>()
+        properties.forEach { prop ->
+            expandPropertyForTableSaw(prop, resolver, flatProperties)
+        }
+
         val fileSpec = genFileSpec(packageName, tableSawClName.simpleName) {
             genLibComment()
 
             val tableClazz = ClassName("tech.tablesaw.api", "Table")
-            val columnClazz = ClassName("tech.tablesaw.api", "Column")
 
             // Function to convert Iterable<Model> to Table
             genFun("toTableSaw") {
@@ -74,91 +90,27 @@ class CrossboxTableSawProcessor : TargetFileProcessor {
                 )
                 returns(tableClazz)
 
-                // Add each property as a column variable
-                properties.forEach { property ->
-                    val propName = property.simpleName.asString()
-                    val propType = property.type.resolve()
-                    val columnType = getTableSawColumnType(propType)
-
+                // Add each flattened property as a column variable
+                flatProperties.forEach { expandedProp ->
+                    val columnType = getTableSawColumnType(expandedProp.type)
                     addStatement(
                         "val %LColumn = %T.create(\"%L\")",
-                        propName,
+                        expandedProp.columnName,
                         columnType,
-                        propName
+                        expandedProp.columnName
                     )
                 }
 
                 beginControlFlow("this.forEach { item ->")
-                properties.forEach { property ->
-                    val propName = property.simpleName.asString()
-                    val propType = property.type.resolve()
-                    val columnType = getTableSawColumnType(propType)
-
-                    if (propType.isMarkedNullable) {
-                        // For nullable types, check null and use appendMissing() or set value
-                        addStatement("%LColumn.appendMissing()", propName)
-                        beginControlFlow("if (item.%L != null)", propName)
-
-                        val nonNullType = propType.makeNotNullable()
-                        val typeName = nonNullType.toTypeName().toString()
-
-                        if (columnType.simpleName == "DoubleColumn" && (typeName == "java.lang.Number" || typeName == "kotlin.Number")) {
-                            // Special case for Number -> Double conversion
-                            addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Number).toDouble())\n", propName, propName, propName)
-                        } else {
-                            val nonNullType = propType.makeNotNullable()
-                            val typeName = nonNullType.toTypeName().toString()
-
-                            // For different types, use appropriate conversion
-                            when {
-                                columnType.simpleName == "StringColumn" -> {
-                                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as String)\n", propName, propName, propName)
-                                }
-                                columnType.simpleName == "LongColumn" -> {
-                                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Long)\n", propName, propName, propName)
-                                }
-                                columnType.simpleName == "IntColumn" -> {
-                                    // IntColumn can accept Int, Short, or Byte - convert to Int
-                                    if (typeName == "kotlin.Short" || typeName == "java.lang.Short") {
-                                        addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Short).toInt())\n", propName, propName, propName)
-                                    } else if (typeName == "kotlin.Byte" || typeName == "java.lang.Byte") {
-                                        addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Byte).toInt())\n", propName, propName, propName)
-                                    } else {
-                                        addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Int)\n", propName, propName, propName)
-                                    }
-                                }
-                                columnType.simpleName == "DoubleColumn" -> {
-                                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Double)\n", propName, propName, propName)
-                                }
-                                columnType.simpleName == "FloatColumn" -> {
-                                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Float)\n", propName, propName, propName)
-                                }
-                                columnType.simpleName == "BooleanColumn" -> {
-                                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Boolean)\n", propName, propName, propName)
-                                }
-                                else -> {
-                                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Any)\n", propName, propName, propName)
-                                }
-                            }
-                        }
-                        endControlFlow()
-                    } else {
-                        // For non-null types, cast if needed (e.g., Number to Double)
-                        val nonNullType = propType.makeNotNullable()
-                        val typeName = nonNullType.toTypeName().toString()
-                        if (typeName == "java.lang.Number" || typeName == "kotlin.Number") {
-                            // For Number type, cast to Double
-                            addStatement("%LColumn.append((item.%L as Number).toDouble())", propName, propName)
-                        } else {
-                            addStatement("%LColumn.append(item.%L)", propName, propName)
-                        }
-                    }
+                flatProperties.forEach { expandedProp ->
+                    val columnType = getTableSawColumnType(expandedProp.type)
+                    generateAppendCodeInline(this, expandedProp, columnType)
                 }
                 endControlFlow()
 
                 // Create array of columns and create table
-                val columnsArrayLines = properties.joinToString(",\n        ") { property ->
-                    "${property.simpleName.asString()}Column"
+                val columnsArrayLines = flatProperties.joinToString(",\n        ") { expandedProp ->
+                    "${expandedProp.columnName}Column"
                 }
                 addCode("return %T.create(\n        %L\n    )\n", tableClazz, columnsArrayLines)
             }
@@ -191,11 +143,9 @@ class CrossboxTableSawProcessor : TargetFileProcessor {
                 returns(tableClazz)
 
                 addCode("return %T.create(\n", tableClazz)
-                properties.forEach { property ->
-                    val propName = property.simpleName.asString()
-                    val propType = property.type.resolve()
-                    val columnType = getTableSawColumnType(propType)
-                    addCode("        %T.create(\"%L\"),\n", columnType, propName)
+                flatProperties.forEach { expandedProp ->
+                    val columnType = getTableSawColumnType(expandedProp.type)
+                    addCode("        %T.create(\"%L\"),\n", columnType, expandedProp.columnName)
                 }
                 addCode("    )\n")
             }
@@ -208,11 +158,215 @@ class CrossboxTableSawProcessor : TargetFileProcessor {
 
     }
 
-    private fun getTableSawColumnType(propType: com.google.devtools.ksp.symbol.KSType): ClassName {
+    private fun expandPropertyForTableSaw(
+        property: KSPropertyDeclaration,
+        resolver: Resolver,
+        result: MutableList<ExpandedProperty>
+    ) {
+        val propName = property.simpleName.asString()
+        val propType = property.type.resolve()
+        val nonNullType = propType.makeNotNullable()
+        val typeName = nonNullType.toTypeName().toString()
+
+        // Check if it's a List type
+        if (isListType(nonNullType)) {
+            // For lists, serialize as JSON string
+            result.add(
+                ExpandedProperty(
+                    originalName = propName,
+                    columnName = propName,
+                    fullPath = propName,
+                    type = propType,
+                    isFromNestedModel = false
+                )
+            )
+        } else if (isNestedModel(nonNullType, resolver)) {
+            // For nested models, expand fields with prefix
+            val nestedClassDecl = nonNullType.declaration as? KSClassDeclaration
+            if (nestedClassDecl != null) {
+                nestedClassDecl.getDeclaredProperties()
+                    .filter { it.isPublic() }
+                    .forEach { nestedProp ->
+                        val nestedPropName = nestedProp.simpleName.asString()
+                        val nestedPropType = nestedProp.type.resolve()
+                        val columnName = "${propName}_${nestedPropName}"
+
+                        result.add(
+                            ExpandedProperty(
+                                originalName = nestedPropName,
+                                columnName = columnName,
+                                fullPath = "$propName.$nestedPropName",
+                                type = nestedPropType,
+                                isFromNestedModel = true
+                            )
+                        )
+                    }
+            }
+        } else {
+            // For simple types, add as is
+            result.add(
+                ExpandedProperty(
+                    originalName = propName,
+                    columnName = propName,
+                    fullPath = propName,
+                    type = propType,
+                    isFromNestedModel = false
+                )
+            )
+        }
+    }
+
+    private fun isListType(type: KSType): Boolean {
+        val typeName = type.toTypeName().toString()
+        return typeName.startsWith("kotlin.collections.List") ||
+                typeName.startsWith("java.util.List") ||
+                typeName.startsWith("kotlin.Sequence")
+    }
+
+    private fun isNestedModel(type: KSType, resolver: Resolver): Boolean {
+        val declaration = type.declaration
+        if (declaration !is KSClassDeclaration) return false
+
+        // Check if class has @CrossboxModel annotation
+        return declaration.getAnnotationsByType(CrossboxModel::class).firstOrNull() != null
+    }
+
+    private fun generateAppendCodeInline(
+        builder: com.squareup.kotlinpoet.FunSpec.Builder,
+        expandedProp: ExpandedProperty,
+        columnType: ClassName
+    ) {
+        with(builder) {
+        if (expandedProp.isFromNestedModel) {
+            val columnName = expandedProp.columnName
+            val fullPath = expandedProp.fullPath
+
+            addStatement("%LColumn.appendMissing()", columnName)
+            beginControlFlow("if (item.%L != null)", expandedProp.fullPath.substringBefore("."))
+            beginControlFlow("if (item.%L != null)", fullPath)
+
+            val nonNullType = expandedProp.type.makeNotNullable()
+            val typeName = nonNullType.toTypeName().toString()
+
+            when {
+                columnType.simpleName == "StringColumn" -> {
+                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as String)\n", columnName, columnName, fullPath)
+                }
+                columnType.simpleName == "DoubleColumn" && (typeName == "java.lang.Number" || typeName == "kotlin.Number") -> {
+                    addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Number).toDouble())\n", columnName, columnName, fullPath)
+                }
+                columnType.simpleName == "LongColumn" -> {
+                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Long)\n", columnName, columnName, fullPath)
+                }
+                columnType.simpleName == "IntColumn" -> {
+                    when {
+                        typeName == "kotlin.Short" || typeName == "java.lang.Short" -> {
+                            addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Short).toInt())\n", columnName, columnName, fullPath)
+                        }
+                        typeName == "kotlin.Byte" || typeName == "java.lang.Byte" -> {
+                            addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Byte).toInt())\n", columnName, columnName, fullPath)
+                        }
+                        else -> {
+                            addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Int)\n", columnName, columnName, fullPath)
+                        }
+                    }
+                }
+                columnType.simpleName == "DoubleColumn" -> {
+                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Double)\n", columnName, columnName, fullPath)
+                }
+                columnType.simpleName == "FloatColumn" -> {
+                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Float)\n", columnName, columnName, fullPath)
+                }
+                columnType.simpleName == "BooleanColumn" -> {
+                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Boolean)\n", columnName, columnName, fullPath)
+                }
+                else -> {
+                    addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Any)\n", columnName, columnName, fullPath)
+                }
+            }
+            endControlFlow()
+            endControlFlow()
+        } else {
+            val columnName = expandedProp.columnName
+            val fullPath = expandedProp.fullPath
+            val nonNullType = expandedProp.type.makeNotNullable()
+            val typeName = nonNullType.toTypeName().toString()
+
+            if (expandedProp.type.isMarkedNullable) {
+                addStatement("%LColumn.appendMissing()", columnName)
+                beginControlFlow("if (item.%L != null)", fullPath)
+
+                when {
+                    isListType(nonNullType) -> {
+                        // Serialize list to JSON
+                        addCode("    %LColumn.set(%LColumn.size() - 1, item.%L.toString())\n", columnName, columnName, fullPath)
+                    }
+                    columnType.simpleName == "StringColumn" -> {
+                        addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as String)\n", columnName, columnName, fullPath)
+                    }
+                    columnType.simpleName == "DoubleColumn" && (typeName == "java.lang.Number" || typeName == "kotlin.Number") -> {
+                        addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Number).toDouble())\n", columnName, columnName, fullPath)
+                    }
+                    columnType.simpleName == "LongColumn" -> {
+                        addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Long)\n", columnName, columnName, fullPath)
+                    }
+                    columnType.simpleName == "IntColumn" -> {
+                        when {
+                            typeName == "kotlin.Short" || typeName == "java.lang.Short" -> {
+                                addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Short).toInt())\n", columnName, columnName, fullPath)
+                            }
+                            typeName == "kotlin.Byte" || typeName == "java.lang.Byte" -> {
+                                addCode("    %LColumn.set(%LColumn.size() - 1, (item.%L as Byte).toInt())\n", columnName, columnName, fullPath)
+                            }
+                            else -> {
+                                addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Int)\n", columnName, columnName, fullPath)
+                            }
+                        }
+                    }
+                    columnType.simpleName == "DoubleColumn" -> {
+                        addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Double)\n", columnName, columnName, fullPath)
+                    }
+                    columnType.simpleName == "FloatColumn" -> {
+                        addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Float)\n", columnName, columnName, fullPath)
+                    }
+                    columnType.simpleName == "BooleanColumn" -> {
+                        addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Boolean)\n", columnName, columnName, fullPath)
+                    }
+                    else -> {
+                        addCode("    %LColumn.set(%LColumn.size() - 1, item.%L as Any)\n", columnName, columnName, fullPath)
+                    }
+                }
+                endControlFlow()
+            } else {
+                when {
+                    isListType(nonNullType) -> {
+                        // Serialize list to JSON
+                        addStatement("%LColumn.append(item.%L.toString())", columnName, fullPath)
+                    }
+                    typeName == "java.lang.Number" || typeName == "kotlin.Number" -> {
+                        addStatement("%LColumn.append((item.%L as Number).toDouble())", columnName, fullPath)
+                    }
+                    else -> {
+                        addStatement("%LColumn.append(item.%L)", columnName, fullPath)
+                    }
+                }
+            }
+        }
+        }
+    }
+
+    private fun getTableSawColumnType(propType: KSType): ClassName {
         // Remove nullable annotation
         val nonNullType = propType.makeNotNullable()
         val typeName = nonNullType.toTypeName().toString()
+
         return when {
+            // List types are serialized as strings
+            typeName.startsWith("kotlin.collections.List") ||
+            typeName.startsWith("java.util.List") ||
+            typeName.startsWith("kotlin.Sequence") ->
+                ClassName("tech.tablesaw.api", "StringColumn")
+
             typeName == "kotlin.String" || typeName == "java.lang.String" ->
                 ClassName("tech.tablesaw.api", "StringColumn")
             typeName == "kotlin.Int" || typeName == "java.lang.Integer" ->
