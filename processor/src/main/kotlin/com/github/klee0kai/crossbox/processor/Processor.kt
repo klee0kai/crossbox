@@ -43,6 +43,7 @@ class Processor(
         CrossboxProxyClassProcessor(),
         CrossboxRsqlFilterProcessor(),
         CrossboxTableSawProcessor(),
+        CrossboxJoineryDataFrameProcessor(),
     )
 
     override fun process(

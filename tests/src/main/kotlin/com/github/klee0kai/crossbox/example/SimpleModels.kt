@@ -1,5 +1,6 @@
 package com.github.klee0kai.crossbox.example
 
+import com.github.klee0kai.crossbox.core.CrossboxJoineryDataFrame
 import com.github.klee0kai.crossbox.core.CrossboxModel
 import com.github.klee0kai.crossbox.core.CrossboxRsqlFilter
 import com.github.klee0kai.crossbox.core.CrossboxTableSaw
@@ -7,6 +8,7 @@ import com.github.klee0kai.crossbox.core.CrossboxTableSaw
 @CrossboxModel
 @CrossboxRsqlFilter
 @CrossboxTableSaw
+@CrossboxJoineryDataFrame
 data class SimpleModel(
     val someIdField: Long? = null,
     val someNameField: String? = null,
@@ -47,6 +49,7 @@ data class Address(
 
 @CrossboxModel
 @CrossboxTableSaw
+@CrossboxJoineryDataFrame
 data class PersonWithAddress(
     val id: Long? = null,
     val name: String? = null,
@@ -57,6 +60,7 @@ data class PersonWithAddress(
 
 @CrossboxModel
 @CrossboxTableSaw
+@CrossboxJoineryDataFrame
 data class PersonWithTags(
     val id: Long? = null,
     val name: String? = null,
@@ -67,6 +71,7 @@ data class PersonWithTags(
 
 @CrossboxModel
 @CrossboxTableSaw
+@CrossboxJoineryDataFrame
 data class PersonComplex(
     val id: Long? = null,
     val name: String? = null,
