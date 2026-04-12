@@ -22,10 +22,12 @@ data class DeepMergeSimpleModel(
     companion object;
 }
 
-@CrossboxModel
+@CrossboxModel(merge = false)
+@CrossboxRsqlFilter
 data class DeepRsqlModel(
     val commonId: Long? = null,
-    val simpleModel: List<SimpleModel>? = null,
+    val children: List<SimpleModel>? = null,
+    val recursiveChildren: List<DeepRsqlModel> = emptyList(),
     val tags: List<String>? = null,
 ) {
     companion object;

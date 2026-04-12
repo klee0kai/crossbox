@@ -12,7 +12,7 @@ class SimpleModelsTests {
     @Test
     fun modelFieldListTest() {
         val list = SimpleModel.fieldList
-        assertEquals(listOf("name", "number", "long", "short"), list.map { it.name })
+        assertEquals(listOf("someIdField", "someNameField", "anyCountField", "somePrefixFlagsField"), list.map { it.name })
     }
 
     @Test

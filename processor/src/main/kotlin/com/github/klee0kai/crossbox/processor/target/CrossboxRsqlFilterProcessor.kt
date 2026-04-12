@@ -119,29 +119,64 @@ class CrossboxRsqlFilterProcessor : TargetFileProcessor {
                 endControlFlow()
             }
 
-            // Helper function to match fields
+            // Helper function to match fields with nested path support
             genFun("matchField") {
                 receiver(modelClassName)
-                addParameter("fieldName", String::class.asClassName())
+                addParameter("fieldPath", String::class.asClassName())
                 addParameter("operator", String::class.asClassName())
                 addParameter("value", String::class.asClassName())
                 returns(Boolean::class.asClassName())
 
+                // First split by dot to get all segments (including [*] parts)
+                addStatement("val allSegments = fieldPath.split(\".\")")
+                addStatement("val rootSegment = allSegments.getOrNull(0) ?: return false")
+
+                // Check if root is a list access and extract field name
+                addStatement("val isRootList = rootSegment.endsWith(\"[*]\")")
+                addStatement("val rootField = if (isRootList) rootSegment.dropLast(3) else rootSegment")
+                addStatement("val remainingPath = if (isRootList) listOf(\"[*]\") + allSegments.drop(1) else allSegments.drop(1)")
+
                 val fieldMatchCode = CodeBlock.builder()
-                fieldMatchCode.beginControlFlow("return when (fieldName)")
+                fieldMatchCode.beginControlFlow("val fieldValue = when (rootField)")
                 properties.forEach { property ->
                     val propName = property.simpleName.asString()
-                    fieldMatchCode.addStatement(
-                        "\"%L\" -> %L?.let { %T.compareValues(it, operator, value) } ?: false",
-                        propName,
-                        propName,
-                        RsqlTools::class,
-                    )
+                    fieldMatchCode.addStatement("\"%L\" -> %L", propName, propName)
                 }
-                fieldMatchCode.addStatement("else -> false")
+                fieldMatchCode.addStatement("else -> null")
                 fieldMatchCode.endControlFlow()
 
                 addCode(fieldMatchCode.build())
+                addStatement("return matchNestedField(fieldValue, remainingPath, operator, value)")
+            }
+
+            // Helper function to recursively match nested fields
+            genFun("matchNestedField") {
+                receiver(modelClassName)
+                addParameter("fieldValue", Any::class.asClassName().copy(nullable = true))
+                addParameter("remainingPath", List::class.asClassName().parameterizedBy(String::class.asClassName()))
+                addParameter("operator", String::class.asClassName())
+                addParameter("value", String::class.asClassName())
+                returns(Boolean::class.asClassName())
+
+                addStatement("if (fieldValue == null) return false")
+                addStatement("if (remainingPath.isEmpty()) return %T.compareValues(fieldValue, operator, value)", RsqlTools::class)
+
+                addStatement("val nextSegment = remainingPath.getOrNull(0) ?: return false")
+
+                // Handle [*] marker specially - it means we need to iterate through a list
+                beginControlFlow("if (nextSegment == \"[*]\")")
+                beginControlFlow("if (fieldValue !is List<*>)")
+                addStatement("return false")
+                endControlFlow()
+                addStatement("val nextPath = remainingPath.drop(1)")
+                addStatement("return fieldValue.any { item -> item != null && matchNestedField(item, nextPath, operator, value) }")
+                endControlFlow()
+
+                // For non-list access, extract field name and use reflection
+                addStatement("val field = try { fieldValue.javaClass.getDeclaredField(nextSegment) } catch (e: Exception) { null } ?: return false")
+                addStatement("field.isAccessible = true")
+                addStatement("val nextValue = try { field.get(fieldValue) } catch (e: Exception) { null }")
+                addStatement("return matchNestedField(nextValue, remainingPath.drop(1), operator, value)")
             }
 
         }

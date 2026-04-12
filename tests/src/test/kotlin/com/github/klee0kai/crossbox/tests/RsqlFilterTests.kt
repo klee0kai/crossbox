@@ -2,6 +2,7 @@ package com.github.klee0kai.crossbox.tests
 
 import com.github.klee0kai.crossbox.core.tools.RsqlTools
 import com.github.klee0kai.crossbox.example.SimpleModel
+import com.github.klee0kai.crossbox.example.DeepRsqlModel
 import com.github.klee0kai.crossbox.example.crossbox.filterByRsqlQuery
 import com.github.klee0kai.crossbox.example.crossbox.matchesRsqlQuery
 import org.junit.jupiter.api.Assertions.*
@@ -486,6 +487,169 @@ class RsqlFilterTests {
             inRange.forEach { model ->
                 assertTrue(model.matchesRsqlQuery(query))
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("Nested Fields Tests")
+    inner class NestedFieldsTests {
+
+        @Test
+        @DisplayName("Parse nested field expression")
+        fun testParseNestedFieldExpression() {
+            val expr = "children[*].someNameField==Alice"
+            val result = RsqlTools.parseSingleExpression(expr)
+
+            assertEquals("children[*].someNameField", result["field"])
+            assertEquals("==", result["operator"])
+            assertEquals("Alice", result["value"])
+        }
+
+        @Test
+        @DisplayName("Parse dot notation field expression")
+        fun testParseDotNotationFieldExpression() {
+            val expr = "parent.nestedField==value"
+            val result = RsqlTools.parseSingleExpression(expr)
+
+            assertEquals("parent.nestedField", result["field"])
+            assertEquals("==", result["operator"])
+            assertEquals("value", result["value"])
+        }
+
+        @Test
+        @DisplayName("Parse deeply nested field expression")
+        fun testParseDeeplyNestedFieldExpression() {
+            val expr = "level1[*].level2.level3==test"
+            val result = RsqlTools.parseSingleExpression(expr)
+
+            assertEquals("level1[*].level2.level3", result["field"])
+            assertEquals("==", result["operator"])
+            assertEquals("test", result["value"])
+        }
+
+        @Test
+        @DisplayName("Filter deep models by list field")
+        fun testFilterDeepModelsByListField() {
+            val model1 = DeepRsqlModel(
+                commonId = 1L,
+                children = listOf(
+                    SimpleModel(someNameField = "Alice", someIdField = 100L),
+                    SimpleModel(someNameField = "Bob", someIdField = 200L)
+                )
+            )
+            val model2 = DeepRsqlModel(
+                commonId = 2L,
+                children = listOf(
+                    SimpleModel(someNameField = "Charlie", someIdField = 300L)
+                )
+            )
+            val model3 = DeepRsqlModel(
+                commonId = 3L,
+                children = null
+            )
+
+            val models = listOf(model1, model2, model3)
+
+            // Test matching models that have children with specific name
+            val result = models.filterByRsqlQuery("children[*].someNameField==Alice")
+            assertEquals(1, result.size)
+            assertEquals(1L, result[0].commonId)
+        }
+
+        @Test
+        @DisplayName("Filter deep models by list field with numeric comparison")
+        fun testFilterDeepModelsByListFieldNumeric() {
+            val model1 = DeepRsqlModel(
+                commonId = 1L,
+                children = listOf(
+                    SimpleModel(someNameField = "Alice", someIdField = 100L),
+                    SimpleModel(someNameField = "Bob", someIdField = 200L)
+                )
+            )
+            val model2 = DeepRsqlModel(
+                commonId = 2L,
+                children = listOf(
+                    SimpleModel(someNameField = "Charlie", someIdField = 300L)
+                )
+            )
+
+            val models = listOf(model1, model2)
+
+            // Find models that have at least one child with id > 150
+            val result = models.filterByRsqlQuery("children[*].someIdField=gt=150")
+            assertEquals(2, result.size)
+        }
+
+        @Test
+        @DisplayName("Filter deep models by recursive list")
+        fun testFilterDeepModelsByRecursiveList() {
+            val deepChild = DeepRsqlModel(
+                commonId = 10L,
+                children = listOf(
+                    SimpleModel(someNameField = "DeepChild", someIdField = 1000L)
+                )
+            )
+            val model1 = DeepRsqlModel(
+                commonId = 1L,
+                recursiveChildren = listOf(deepChild)
+            )
+            val model2 = DeepRsqlModel(
+                commonId = 2L,
+                recursiveChildren = emptyList()
+            )
+
+            val models = listOf(model1, model2)
+
+            // Find models that have recursive children with specific id
+            val result = models.filterByRsqlQuery("recursiveChildren[*].commonId==10")
+            assertEquals(1, result.size)
+            assertEquals(1L, result[0].commonId)
+        }
+
+        @Test
+        @DisplayName("Multiple conditions on nested fields")
+        fun testMultipleConditionsOnNestedFields() {
+            val model1 = DeepRsqlModel(
+                commonId = 1L,
+                children = listOf(
+                    SimpleModel(someNameField = "Alice", someIdField = 100L),
+                    SimpleModel(someNameField = "Bob", someIdField = 200L)
+                )
+            )
+            val model2 = DeepRsqlModel(
+                commonId = 2L,
+                children = listOf(
+                    SimpleModel(someNameField = "Charlie", someIdField = 300L)
+                )
+            )
+
+            val models = listOf(model1, model2)
+
+            // Find models matching multiple conditions
+            val result = models.filterByRsqlQuery("commonId=gte=1;children[*].someIdField=gt=150")
+            assertEquals(2, result.size)
+        }
+
+        @Test
+        @DisplayName("Empty list doesn't match nested filter")
+        fun testEmptyListDoesntMatch() {
+            val model = DeepRsqlModel(
+                commonId = 1L,
+                children = null
+            )
+
+            assertFalse(model.matchesRsqlQuery("children[*].someNameField==Alice"))
+        }
+
+        @Test
+        @DisplayName("Nested field on null parent returns false")
+        fun testNestedFieldOnNullParent() {
+            val model = DeepRsqlModel(
+                commonId = 1L,
+                children = null
+            )
+
+            assertFalse(model.matchesRsqlQuery("children[*].someNameField!=Unknown"))
         }
     }
 

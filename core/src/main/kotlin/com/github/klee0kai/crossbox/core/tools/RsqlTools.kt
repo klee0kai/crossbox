@@ -2,7 +2,7 @@ package com.github.klee0kai.crossbox.core.tools
 
 object RsqlTools {
 
-    val rsqlRegex by lazy { Regex("([\\w]+)\\s*(==|!=|=gt=|=gte=|=lt=|=lte=|=in=|=out=)\\s*(.+)") }
+    val rsqlRegex by lazy { Regex("([\\w.\\[\\]*]+)\\s*(==|!=|=gt=|=gte=|=lt=|=lte=|=in=|=out=)\\s*(.+)") }
 
     public fun parseRsqlQuery(
         rsqlQuery: String,
