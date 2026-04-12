@@ -2,9 +2,11 @@ package com.github.klee0kai.crossbox.example
 
 import com.github.klee0kai.crossbox.core.CrossboxModel
 import com.github.klee0kai.crossbox.core.CrossboxRsqlFilter
+import com.github.klee0kai.crossbox.core.CrossboxTableSaw
 
 @CrossboxModel
 @CrossboxRsqlFilter
+@CrossboxTableSaw
 data class SimpleModel(
     val someIdField: Long? = null,
     val someNameField: String? = null,
