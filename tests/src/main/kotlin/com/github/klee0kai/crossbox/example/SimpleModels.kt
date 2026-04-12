@@ -1,13 +1,15 @@
 package com.github.klee0kai.crossbox.example
 
 import com.github.klee0kai.crossbox.core.CrossboxModel
+import com.github.klee0kai.crossbox.core.CrossboxRsqlFilter
 
 @CrossboxModel
+@CrossboxRsqlFilter
 data class SimpleModel(
-    val name: String? = null,
-    val number: Number? = null,
-    val long: Long? = null,
-    val short: Short? = null,
+    val someIdField: Long? = null,
+    val someNameField: String? = null,
+    val anyCountField: Number? = null,
+    val somePrefixFlagsField: Short? = null,
 ) {
     companion object;
 }

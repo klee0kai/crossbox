@@ -41,6 +41,7 @@ class Processor(
         CrossboxSuspendInterfaceProcessor(),
         CrossboxAsyncInterfaceProcessor(),
         CrossboxProxyClassProcessor(),
+        CrossboxRsqlFilterProcessor(),
     )
 
     override fun process(
