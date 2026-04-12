@@ -19,6 +19,9 @@ dependencies {
     ksp(project(":processor"))
 
     implementation(libs.bundles.kotlin)
+    implementation(libs.tablesaw.core)
+    implementation(libs.joinery)
+    implementation(libs.poi)
     testImplementation(libs.jupiter.api)
     testRuntimeOnly(libs.jupiter.engine)
 }

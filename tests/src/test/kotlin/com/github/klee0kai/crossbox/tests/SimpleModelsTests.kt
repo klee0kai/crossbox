@@ -12,26 +12,26 @@ class SimpleModelsTests {
     @Test
     fun modelFieldListTest() {
         val list = SimpleModel.fieldList
-        assertEquals(listOf("name", "number", "long", "short"), list.map { it.name })
+        assertEquals(listOf("someIdField", "someNameField", "anyCountField", "somePrefixFlagsField"), list.map { it.name })
     }
 
     @Test
     fun modelMergeTest() {
         val oneSourceModel = SimpleModel(
-            name = "name",
-            number = 1,
+            someNameField = "name",
+            anyCountField = 1,
         )
         val secondSourceModel = SimpleModel(
-            long = 2,
+            someIdField = 2,
         )
 
         val merged = oneSourceModel.merge(secondSourceModel)
 
         assertEquals(
             SimpleModel(
-                name = "name",
-                number = 1,
-                long = 2,
+                someNameField = "name",
+                anyCountField = 1,
+                someIdField = 2,
             ),
             merged
         )
@@ -39,17 +39,17 @@ class SimpleModelsTests {
 
     @Test
     fun modelChangedTest() {
-        val oneSourceModel = SimpleModel(name = "name", number = 1)
-        val secondSourceModel = oneSourceModel.copy(number = 2)
+        val oneSourceModel = SimpleModel(someNameField = "name", anyCountField = 1)
+        val secondSourceModel = oneSourceModel.copy(anyCountField = 2)
 
         var nameChangedCount = 0
         var changedCount = 0
         oneSourceModel.changes(
             changed = secondSourceModel,
-            nameChanged = {
+            someNameFieldChanged = {
                 nameChangedCount++
             },
-            numberChanged = {
+            anyCountFieldChanged = {
                 changedCount++
             }
         )

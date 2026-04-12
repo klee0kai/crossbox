@@ -41,6 +41,9 @@ class Processor(
         CrossboxSuspendInterfaceProcessor(),
         CrossboxAsyncInterfaceProcessor(),
         CrossboxProxyClassProcessor(),
+        CrossboxRsqlFilterProcessor(),
+        CrossboxTableSawProcessor(),
+        CrossboxJoineryDataFrameProcessor(),
     )
 
     override fun process(
