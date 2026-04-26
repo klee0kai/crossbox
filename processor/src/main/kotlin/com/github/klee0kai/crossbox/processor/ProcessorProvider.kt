@@ -11,6 +11,7 @@ import com.github.klee0kai.crossbox.processor.target.rsql.CrossboxRsqlFilterProc
 import com.github.klee0kai.crossbox.processor.target.table.CrossboxJoineryDataFrameProcessor
 import com.github.klee0kai.crossbox.processor.target.table.CrossboxJoineryRegistryProcessor
 import com.github.klee0kai.crossbox.processor.target.table.CrossboxTableSawProcessor
+import com.github.klee0kai.crossbox.processor.target.table.CrossboxTableSawRegistryProcessor
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
@@ -27,6 +28,7 @@ class ProcessorProvider : SymbolProcessorProvider {
                 CrossboxProxyClassProcessor(),
                 CrossboxRsqlFilterProcessor(),
                 CrossboxTableSawProcessor(),
+                CrossboxTableSawRegistryProcessor(),
                 CrossboxJoineryDataFrameProcessor(),
                 CrossboxJoineryRegistryProcessor(),
                 CrossboxSerializableProcessor(),

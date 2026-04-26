@@ -2,14 +2,14 @@
 
 package com.github.klee0kai.crossbox.processor.target.table
 
-import com.github.klee0kai.crossbox.core.CrossboxJoineryDataFrame
+import com.github.klee0kai.crossbox.core.CrossboxTableSaw
 import com.github.klee0kai.crossbox.processor.common.findCommonPgk
 import com.github.klee0kai.crossbox.processor.exceptions.forEachKsNode
 import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.poet.*
-import com.github.klee0kai.crossbox.processor.target.table.CrossboxJoineryDataFrameProcessor.Companion.dataFrameClazz
+import com.github.klee0kai.crossbox.processor.target.table.CrossboxTableSawProcessor.Companion.tableSawClazz
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.getAnnotationsByType
@@ -24,15 +24,15 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toClassName
 import kotlin.reflect.KClass
 
-class CrossboxJoineryRegistryProcessor : TargetSymbolProcessor {
+class CrossboxTableSawRegistryProcessor : TargetSymbolProcessor {
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,
     ): SymbolsToProcess {
 
         val annotatedSymbols = resolver
-            .getSymbolsWithAnnotation(CrossboxJoineryDataFrame::class.asClassName().canonicalName)
-            .filter { it.getAnnotationsByType(CrossboxJoineryDataFrame::class).firstOrNull()?.commonRegistry == true }
+            .getSymbolsWithAnnotation(CrossboxTableSaw::class.asClassName().canonicalName)
+            .filter { it.getAnnotationsByType(CrossboxTableSaw::class).firstOrNull()?.commonRegistry == true }
             .groupBy { it.validate() }
 
         return SymbolsToProcess(
@@ -55,8 +55,8 @@ class CrossboxJoineryRegistryProcessor : TargetSymbolProcessor {
         val commonPkg = targetSymbols
             .mapNotNull { it.containingFile?.packageName?.asString() }
             .findCommonPgk()
-        val joineryRegistryClName = ClassName(commonPkg.crossboxPackageName, "JoineryRegistry")
-        val joineryToolClName = ClassName(commonPkg.crossboxPackageName + ".JoineryRegistry", "JoineryTool")
+        val joineryRegistryClName = ClassName(commonPkg.crossboxPackageName, "TableSawRegistry")
+        val tableSawToolClName = ClassName(commonPkg.crossboxPackageName + ".TableSawRegistry", "TableSawTool")
 
         // Generate registry file with all collected serializable classes
         val fileSpec = genFileSpec(joineryRegistryClName.packageName, joineryRegistryClName.simpleName) {
@@ -64,18 +64,18 @@ class CrossboxJoineryRegistryProcessor : TargetSymbolProcessor {
 
             genObject(joineryRegistryClName) {
 
-                genClass(joineryToolClName) {
+                genClass(tableSawToolClName) {
                     val tType = TypeVariableName("T", Any::class.asClassName())
                     addTypeVariable(tType)
                     addModifiers(KModifier.OPEN)
-                    val iterableToDataFrameType = LambdaTypeName.get(
+                    val iterableToTableSawType = LambdaTypeName.get(
                         receiver = Iterable::class.asClassName().parameterizedBy(tType),
                         parameters = emptyList(),
-                        returnType = CrossboxJoineryDataFrameProcessor.dataFrameClazz,
+                        returnType = tableSawClazz,
                     )
                     genPrimaryConstructor {
                         addParameter("type", KClass::class.asClassName().parameterizedBy(tType))
-                        addParameter("iterableToDataFrame", iterableToDataFrameType)
+                        addParameter("iterableToTableSaw", iterableToTableSawType)
                     }
 
                     genProperty(
@@ -85,8 +85,8 @@ class CrossboxJoineryRegistryProcessor : TargetSymbolProcessor {
                         initFromConstructor()
                     }
                     genProperty(
-                        name = "iterableToDataFrame",
-                        type = iterableToDataFrameType,
+                        name = "iterableToTableSaw",
+                        type = iterableToTableSawType,
                     ) {
                         initFromConstructor()
                     }
@@ -94,11 +94,11 @@ class CrossboxJoineryRegistryProcessor : TargetSymbolProcessor {
 
                 // Generate property with map of serializers
                 genProperty(
-                    name = "joineryRegistry",
+                    name = "tableSawRegistry",
                     type = Map::class.asClassName()
                         .parameterizedBy(
                             KClass::class.asClassName().parameterizedBy(STAR),
-                            joineryToolClName.parameterizedBy(STAR)
+                            tableSawToolClName.parameterizedBy(STAR)
                         ),
                     KModifier.PUBLIC
                 ) {
@@ -107,47 +107,47 @@ class CrossboxJoineryRegistryProcessor : TargetSymbolProcessor {
                         targetSymbols.forEachKsNode { index, classDecl ->
                             val className = (classDecl as KSClassDeclaration).toClassName()
                             addCode(
-                                "%T::class to JoineryTool(type = %T::class, iterableToDataFrame = { %M() } ),\n",
+                                "%T::class to TableSawTool(type = %T::class, iterableToTableSaw = { %M() } ),\n",
                                 className,
                                 className,
-                                MemberName(className.packageName.crossboxPackageName, "toDataFrame"),
+                                MemberName(className.packageName.crossboxPackageName, "toTableSaw"),
                             )
                         }
                         addCode(")")
                     }
                 }
 
-                genFun("toDataFrame") {
+                genFun("toTableSaw") {
                     val tType = TypeVariableName("T").copy(reified = true)
                     val iterableOfT = Iterable::class.asClassName().parameterizedBy(TypeVariableName("T"))
                     val lambdaType = LambdaTypeName.get(
                         receiver = iterableOfT,
-                        returnType = dataFrameClazz
+                        returnType = tableSawClazz
                     )
                     addModifiers(KModifier.INLINE)
                     addTypeVariable(tType)
                     addParameter("value", iterableOfT)
-                    returns(dataFrameClazz)
+                    returns(tableSawClazz)
                     addStatement(
-                        "val transformLambda = joineryRegistry[T::class]!!.iterableToDataFrame as %T",
+                        "val transformLambda = tableSawRegistry[T::class]!!.iterableToTableSaw as %T",
                         lambdaType
                     )
                     addStatement("return transformLambda.invoke(value)")
                 }
 
-                genFun("toDataFrame") {
+                genFun("toTableSaw") {
                     val tType = TypeVariableName("T").copy(reified = true)
                     val iterableOfT = Iterable::class.asClassName().parameterizedBy(TypeVariableName("T"))
                     val lambdaType = LambdaTypeName.get(
                         receiver = iterableOfT,
-                        returnType = dataFrameClazz
+                        returnType = tableSawClazz
                     )
                     addModifiers(KModifier.INLINE)
                     addTypeVariable(tType)
                     addParameter("value", tType)
-                    returns(dataFrameClazz)
+                    returns(tableSawClazz)
                     addStatement(
-                        "val transformLambda = joineryRegistry[T::class]!!.iterableToDataFrame as %T",
+                        "val transformLambda = tableSawRegistry[T::class]!!.iterableToTableSaw as %T",
                         lambdaType
                     )
                     addStatement("return transformLambda.invoke(arrayListOf(value))")

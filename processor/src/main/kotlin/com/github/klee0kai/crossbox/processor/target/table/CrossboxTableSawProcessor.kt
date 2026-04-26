@@ -28,6 +28,11 @@ import com.squareup.kotlinpoet.ksp.toTypeName
 
 class CrossboxTableSawProcessor : TargetSymbolProcessor {
 
+
+    companion object{
+        val tableSawClazz = ClassName("tech.tablesaw.api", "Table")
+    }
+
     data class ExpandedProperty(
         val originalName: String,
         val columnName: String,
@@ -81,7 +86,6 @@ class CrossboxTableSawProcessor : TargetSymbolProcessor {
         val fileSpec = genFileSpec(packageName, tableSawClName.simpleName) {
             genLibComment()
 
-            val tableClazz = ClassName("tech.tablesaw.api", "Table")
 
             // Function to convert Iterable<Model> to Table
             genFun("toTableSaw") {
@@ -89,7 +93,7 @@ class CrossboxTableSawProcessor : TargetSymbolProcessor {
                     Iterable::class.asClassName()
                         .parameterizedBy(modelClassName)
                 )
-                returns(tableClazz)
+                returns(tableSawClazz)
 
                 // Add each flattened property as a column variable
                 flatProperties.forEach { expandedProp ->
@@ -113,7 +117,7 @@ class CrossboxTableSawProcessor : TargetSymbolProcessor {
                 val columnsArrayLines = flatProperties.joinToString(",\n        ") { expandedProp ->
                     "${expandedProp.columnName}Column"
                 }
-                addCode("return %T.create(\n        %L\n    )\n", tableClazz, columnsArrayLines)
+                addCode("return %T.create(\n        %L\n    )\n", tableSawClazz, columnsArrayLines)
             }
 
             // Function to convert Sequence<Model> to Table
@@ -122,7 +126,7 @@ class CrossboxTableSawProcessor : TargetSymbolProcessor {
                     Sequence::class.asClassName()
                         .parameterizedBy(modelClassName)
                 )
-                returns(tableClazz)
+                returns(tableSawClazz)
 
                 addStatement("return this.toList().toTableSaw()")
             }
@@ -130,7 +134,7 @@ class CrossboxTableSawProcessor : TargetSymbolProcessor {
             // Function to convert single item to Table (single row)
             genFun("toTableSaw") {
                 receiver(modelClassName)
-                returns(tableClazz)
+                returns(tableSawClazz)
 
                 addStatement("return listOf(this).toTableSaw()")
             }
@@ -141,9 +145,9 @@ class CrossboxTableSawProcessor : TargetSymbolProcessor {
                     List::class.asClassName()
                         .parameterizedBy(modelClassName)
                 )
-                returns(tableClazz)
+                returns(tableSawClazz)
 
-                addCode("return %T.create(\n", tableClazz)
+                addCode("return %T.create(\n", tableSawClazz)
                 flatProperties.forEach { expandedProp ->
                     val columnType = getTableSawColumnType(expandedProp.type)
                     addCode("        %T.create(\"%L\"),\n", columnType, expandedProp.columnName)
