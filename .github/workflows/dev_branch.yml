@@ -24,4 +24,7 @@ jobs:
         run: chmod +x gradlew
       - name: Test with Gradle
         run: ./gradlew check
+        env:
+          SECRETS_GH_ACTOR: ${{ github.SECRETS_GH_ACTOR }}
+          SECRETS_GH_API_TOKEN: ${{ secrets.SECRETS_GH_API_TOKEN }}
 
