@@ -1,4 +1,4 @@
-package com.github.klee0kai.crossbox.tests
+package com.github.klee0kai.crossbox.tests.table
 
 import com.github.klee0kai.crossbox.example.Address
 import com.github.klee0kai.crossbox.example.PersonComplex
@@ -6,6 +6,12 @@ import com.github.klee0kai.crossbox.example.PersonWithAddress
 import com.github.klee0kai.crossbox.example.PersonWithTags
 import com.github.klee0kai.crossbox.example.SimpleModel
 import com.github.klee0kai.crossbox.example.crossbox.toDataFrame
+import com.github.klee0kai.crossbox.tests.columns
+import com.github.klee0kai.crossbox.tests.filter
+import com.github.klee0kai.crossbox.tests.ncol
+import com.github.klee0kai.crossbox.tests.nrow
+import com.github.klee0kai.crossbox.tests.rows
+import com.github.klee0kai.crossbox.tests.select
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

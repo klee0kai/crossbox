@@ -1,4 +1,4 @@
-package com.github.klee0kai.crossbox.tests
+package com.github.klee0kai.crossbox.tests.table
 
 import com.github.klee0kai.crossbox.example.SimpleModel
 import com.github.klee0kai.crossbox.example.crossbox.createEmptyTableSaw

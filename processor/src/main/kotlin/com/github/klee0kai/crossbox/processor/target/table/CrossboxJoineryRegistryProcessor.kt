@@ -9,6 +9,7 @@ import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.poet.*
+import com.github.klee0kai.crossbox.processor.target.table.CrossboxJoineryDataFrameProcessor.Companion.dataFrameClazz
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.getAnnotationsByType
@@ -54,66 +55,104 @@ class CrossboxJoineryRegistryProcessor : TargetSymbolProcessor {
         val commonPkg = targetSymbols
             .mapNotNull { it.containingFile?.packageName?.asString() }
             .findCommonPgk()
-        val joineryToolClName = ClassName(commonPkg.crossboxPackageName, "JoineryTool")
+        val joineryRegistryClName = ClassName(commonPkg.crossboxPackageName, "JoineryRegistry")
+        val joineryToolClName = ClassName(commonPkg.crossboxPackageName + ".JoineryRegistry", "JoineryTool")
 
         // Generate registry file with all collected serializable classes
-        val fileSpec = genFileSpec(
-            packageName = commonPkg.crossboxPackageName,
-            fileName = "JoineyRegistry"
-        ) {
+        val fileSpec = genFileSpec(joineryRegistryClName.packageName, joineryToolClName.simpleName) {
             genLibComment()
 
-            genClass(joineryToolClName) {
-                val tType = TypeVariableName("T", Any::class.asClassName())
-                addTypeVariable(tType)
-                addModifiers(KModifier.OPEN)
-                val iterableToDataFrameType = LambdaTypeName.get(
-                    receiver = Iterable::class.asClassName().parameterizedBy(tType),
-                    parameters = emptyList(),
-                    returnType = CrossboxJoineryDataFrameProcessor.dataFrameClazz,
-                )
-                genPrimaryConstructor {
-                    addParameter("type", KClass::class.asClassName().parameterizedBy(tType))
-                    addParameter("iterableToDataFrame", iterableToDataFrameType)
-                }
+            genObject(joineryRegistryClName) {
 
-                genProperty(
-                    name = "type",
-                    type = KClass::class.asClassName().parameterizedBy(tType),
-                ) {
-                    initFromConstructor()
-                }
-                genProperty(
-                    name = "iterableToDataFrame",
-                    type = iterableToDataFrameType,
-                ) {
-                    initFromConstructor()
-                }
-            }
-
-            // Generate property with map of serializers
-            genProperty(
-                name = "joineryRegistry",
-                type = Map::class.asClassName()
-                    .parameterizedBy(
-                        KClass::class.asClassName().parameterizedBy(STAR),
-                        joineryToolClName.parameterizedBy(STAR)
-                    ),
-                KModifier.PUBLIC
-            ) {
-                genGetter {
-                    addCode("return mapOf(\n")
-                    targetSymbols.forEachKsNode { index, classDecl ->
-                        val className = (classDecl as KSClassDeclaration).toClassName()
-                        addCode(
-                            "%T::class to JoineryTool(type = %T::class, iterableToDataFrame = { %M() } ),\n",
-                            className,
-                            className,
-                            MemberName(className.packageName.crossboxPackageName, "toDataFrame"),
-                        )
+                genClass(joineryToolClName) {
+                    val tType = TypeVariableName("T", Any::class.asClassName())
+                    addTypeVariable(tType)
+                    addModifiers(KModifier.OPEN)
+                    val iterableToDataFrameType = LambdaTypeName.get(
+                        receiver = Iterable::class.asClassName().parameterizedBy(tType),
+                        parameters = emptyList(),
+                        returnType = CrossboxJoineryDataFrameProcessor.dataFrameClazz,
+                    )
+                    genPrimaryConstructor {
+                        addParameter("type", KClass::class.asClassName().parameterizedBy(tType))
+                        addParameter("iterableToDataFrame", iterableToDataFrameType)
                     }
-                    addCode(")")
+
+                    genProperty(
+                        name = "type",
+                        type = KClass::class.asClassName().parameterizedBy(tType),
+                    ) {
+                        initFromConstructor()
+                    }
+                    genProperty(
+                        name = "iterableToDataFrame",
+                        type = iterableToDataFrameType,
+                    ) {
+                        initFromConstructor()
+                    }
                 }
+
+                // Generate property with map of serializers
+                genProperty(
+                    name = "joineryRegistry",
+                    type = Map::class.asClassName()
+                        .parameterizedBy(
+                            KClass::class.asClassName().parameterizedBy(STAR),
+                            joineryToolClName.parameterizedBy(STAR)
+                        ),
+                    KModifier.PUBLIC
+                ) {
+                    genGetter {
+                        addCode("return mapOf(\n")
+                        targetSymbols.forEachKsNode { index, classDecl ->
+                            val className = (classDecl as KSClassDeclaration).toClassName()
+                            addCode(
+                                "%T::class to JoineryTool(type = %T::class, iterableToDataFrame = { %M() } ),\n",
+                                className,
+                                className,
+                                MemberName(className.packageName.crossboxPackageName, "toDataFrame"),
+                            )
+                        }
+                        addCode(")")
+                    }
+                }
+
+                genFun("toDataFrame") {
+                    val tType = TypeVariableName("T").copy(reified = true)
+                    val iterableOfT = Iterable::class.asClassName().parameterizedBy(TypeVariableName("T"))
+                    val lambdaType = LambdaTypeName.get(
+                        receiver = iterableOfT,
+                        returnType = dataFrameClazz
+                    )
+                    addModifiers(KModifier.INLINE)
+                    addTypeVariable(tType)
+                    addParameter("value", iterableOfT)
+                    returns(dataFrameClazz)
+                    addStatement(
+                        "val transformLambda = joineryRegistry[T::class]!!.iterableToDataFrame as %T",
+                        lambdaType
+                    )
+                    addStatement("return transformLambda.invoke(value)")
+                }
+
+                genFun("toDataFrame") {
+                    val tType = TypeVariableName("T").copy(reified = true)
+                    val iterableOfT = Iterable::class.asClassName().parameterizedBy(TypeVariableName("T"))
+                    val lambdaType = LambdaTypeName.get(
+                        receiver = iterableOfT,
+                        returnType = dataFrameClazz
+                    )
+                    addModifiers(KModifier.INLINE)
+                    addTypeVariable(tType)
+                    addParameter("value", tType)
+                    returns(dataFrameClazz)
+                    addStatement(
+                        "val transformLambda = joineryRegistry[T::class]!!.iterableToDataFrame as %T",
+                        lambdaType
+                    )
+                    addStatement("return transformLambda.invoke(arrayListOf(value))")
+                }
+
             }
         }
 
