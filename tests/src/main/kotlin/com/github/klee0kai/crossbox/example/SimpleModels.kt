@@ -42,7 +42,7 @@ data class DeepRsqlModel(
 data class Address(
     val street: String? = null,
     val city: String? = null,
-    val zipCode: String? = null,
+    var zipCode: String? = null,
 ) {
     companion object;
 }
@@ -78,7 +78,7 @@ data class PersonComplex(
     val address: Address? = null,
     val phone: String? = null,
     val interests: List<String>? = null,
-    val ratings: List<Double>? = null,
+    var ratings: List<Double>? = null,
 ) {
     companion object;
 }

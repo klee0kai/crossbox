@@ -61,21 +61,51 @@ class CrossboxModelProcessor : TargetSymbolProcessor {
 
             if (crossboxModelAnn.fieldList) {
                 genProperty(
-                    name = "fieldList",
+                    name = "crossboxFieldList",
                     type = List::class.asClassName()
-                        .parameterizedBy(FieldInfo::class.asTypeName()),
+                        .parameterizedBy(
+                            FieldInfo::class.asTypeName()
+                                .parameterizedBy(classDeclaration.toClassName())
+                        ),
                 ) {
                     receiver(classDeclaration.toClassName().nestedClass("Companion"))
+
+
                     genGetter {
                         addCode("return listOf(\n")
                         primaryConstructorTypes
                             .forEach { prop ->
+                                val propRawType = prop.type.resolve().toTypeName().rawType().copy(nullable = false)
+
+                                val getLambdaBody = prop.name?.asString() ?: ""
+                                val setLambdaBody = when {
+                                    prop.isVar && prop.type.resolve().isMarkedNullable -> {
+                                        CodeBlock.of(
+                                            "%L = it as? %T",
+                                            prop.name?.asString(),
+                                            prop.type.resolve().toTypeName()
+                                        )
+                                    }
+
+                                    prop.isVar -> CodeBlock.of(
+                                        "%L = it as %T",
+                                        prop.name?.asString(),
+                                        prop.type.resolve().toTypeName()
+                                    )
+
+                                    else -> CodeBlock.of("")
+                                }
+
                                 addCode(
-                                    "%T( %S , %T::class , listOf( %L ) ),\n",
+                                    "  %T(name = %S, kclass = %T::class, annotations = listOf(%L), getValue = { %L }, setValue = { %L }),\n",
                                     FieldInfo::class.asTypeName(),
                                     prop.name?.asString(),
-                                    prop.type.resolve().toTypeName().rawType().copy(nullable = false),
-                                    prop.annotations.joinToString { it.toAnnotationSpec().toString().removePrefix("@") }
+                                    propRawType,
+                                    prop.annotations.joinToString {
+                                        it.toAnnotationSpec().toString().removePrefix("@")
+                                    },
+                                    getLambdaBody,
+                                    setLambdaBody,
                                 )
                             }
                         addCode(")")
@@ -92,7 +122,8 @@ class CrossboxModelProcessor : TargetSymbolProcessor {
                     primaryConstructorTypes
                         .forEach { prop ->
                             addCode(
-                                " %L ?: pair?.%L,\n",
+                                "  %L = %L ?: pair?.%L,\n",
+                                prop.name?.asString(),
                                 prop.name?.asString(),
                                 prop.name?.asString()
                             )
@@ -107,19 +138,21 @@ class CrossboxModelProcessor : TargetSymbolProcessor {
                     addCode("return %T(\n", classDeclaration.toClassName())
                     primaryConstructorTypes
                         .forEach { prop ->
-                            val propAnn =
-                                prop.type.resolve().declaration.getAnnotationsByType(CrossboxModel::class)
-                                    .firstOrNull()
+                            val propAnn = prop.type.resolve()
+                                .declaration.getAnnotationsByType(CrossboxModel::class)
+                                .firstOrNull()
                             if (propAnn?.merge == true) {
                                 addCode(
-                                    " %L?.deepMerge( pair?.%L ) ?: pair?.%L,\n",
+                                    "  %L = %L?.deepMerge(pair?.%L) ?: pair?.%L,\n",
+                                    prop.name?.asString(),
                                     prop.name?.asString(),
                                     prop.name?.asString(),
                                     prop.name?.asString(),
                                 )
                             } else {
                                 addCode(
-                                    " %L ?: pair?.%L,\n",
+                                    "  %L = %L ?: pair?.%L,\n",
+                                    prop.name?.asString(),
                                     prop.name?.asString(),
                                     prop.name?.asString()
                                 )
@@ -144,12 +177,12 @@ class CrossboxModelProcessor : TargetSymbolProcessor {
                             )
 
                             beginControlFlow(
-                                "if (%L != null && %L != changed.%L ) ",
+                                "if (%L != null && %L != changed.%L)",
                                 lambdaName,
                                 prop.name?.asString() ?: "",
                                 prop.name?.asString() ?: ""
                             )
-                            addCode("%L()", lambdaName)
+                            addStatement("%L()", lambdaName)
 
                             endControlFlow()
                         }
@@ -165,4 +198,15 @@ class CrossboxModelProcessor : TargetSymbolProcessor {
         )
 
     }
+}
+
+fun TypeName.rawType(): TypeName {
+    val typeName = this
+    if (typeName is ParameterizedTypeName) {
+        return typeName.rawType
+    }
+    if (typeName is WildcardTypeName) {
+        if (!typeName.outTypes.isEmpty()) return typeName.outTypes.first().rawType()
+    }
+    return typeName.copy(nullable = false)
 }
