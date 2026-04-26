@@ -17,7 +17,6 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toClassName
@@ -32,11 +31,10 @@ class CrossboxRsqlFilterRegistryProcessor : TargetSymbolProcessor {
         val annotatedSymbols = resolver
             .getSymbolsWithAnnotation(CrossboxRsqlFilter::class.asClassName().canonicalName)
             .filter { it.getAnnotationsByType(CrossboxRsqlFilter::class).firstOrNull()?.commonRegistry == true }
-            .groupBy { it.validate() }
 
         return SymbolsToProcess(
-            symbolsForProcessing = annotatedSymbols[true].orEmpty(),
-            symbolsForReprocessing = annotatedSymbols[false].orEmpty(),
+            symbolsForProcessing = annotatedSymbols.toList(),
+            symbolsForReprocessing = emptyList(),
             processOnlyTogether = true,
         )
 

@@ -18,7 +18,6 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toClassName
@@ -33,11 +32,10 @@ class CrossboxTableSawRegistryProcessor : TargetSymbolProcessor {
         val annotatedSymbols = resolver
             .getSymbolsWithAnnotation(CrossboxTableSaw::class.asClassName().canonicalName)
             .filter { it.getAnnotationsByType(CrossboxTableSaw::class).firstOrNull()?.commonRegistry == true }
-            .groupBy { it.validate() }
 
         return SymbolsToProcess(
-            symbolsForProcessing = annotatedSymbols[true].orEmpty(),
-            symbolsForReprocessing = annotatedSymbols[false].orEmpty(),
+            symbolsForProcessing = annotatedSymbols.toList(),
+            symbolsForReprocessing = emptyList(),
             processOnlyTogether = true,
         )
 
@@ -55,14 +53,14 @@ class CrossboxTableSawRegistryProcessor : TargetSymbolProcessor {
         val commonPkg = targetSymbols
             .mapNotNull { it.containingFile?.packageName?.asString() }
             .findCommonPgk()
-        val joineryRegistryClName = ClassName(commonPkg.crossboxPackageName, "TableSawRegistry")
+        val tableSawRegistryClName = ClassName(commonPkg.crossboxPackageName, "TableSawRegistry")
         val tableSawToolClName = ClassName(commonPkg.crossboxPackageName + ".TableSawRegistry", "TableSawTool")
 
         // Generate registry file with all collected serializable classes
-        val fileSpec = genFileSpec(joineryRegistryClName.packageName, joineryRegistryClName.simpleName) {
+        val fileSpec = genFileSpec(tableSawRegistryClName.packageName, tableSawRegistryClName.simpleName) {
             genLibComment()
 
-            genObject(joineryRegistryClName) {
+            genObject(tableSawRegistryClName) {
 
                 genClass(tableSawToolClName) {
                     val tType = TypeVariableName("T", Any::class.asClassName())
