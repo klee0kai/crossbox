@@ -4,9 +4,9 @@ package com.github.klee0kai.crossbox.processor.target
 
 import com.github.klee0kai.crossbox.core.CrossboxAsyncInterface
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
-import com.github.klee0kai.crossbox.processor.ksp.GenSpec
-import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
-import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
+import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
+import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
+import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.poet.*
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.Dependencies
@@ -24,7 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 
-class CrossboxAsyncInterfaceProcessor : TargetFileProcessor {
+class CrossboxAsyncInterfaceProcessor : TargetSymbolProcessor {
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,

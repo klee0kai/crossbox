@@ -4,9 +4,9 @@ package com.github.klee0kai.crossbox.processor.target
 
 import com.github.klee0kai.crossbox.core.CrossboxJoineryDataFrame
 import com.github.klee0kai.crossbox.core.CrossboxModel
-import com.github.klee0kai.crossbox.processor.ksp.GenSpec
-import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
-import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
+import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
+import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
+import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.poet.crossboxPackageName
 import com.github.klee0kai.crossbox.processor.poet.genFileSpec
 import com.github.klee0kai.crossbox.processor.poet.genFun
@@ -25,7 +25,7 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 
-class CrossboxJoineryDataFrameProcessor : TargetFileProcessor {
+class CrossboxJoineryDataFrameProcessor : TargetSymbolProcessor {
 
     data class ExpandedProperty(
         val originalName: String,

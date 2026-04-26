@@ -6,9 +6,9 @@ import com.github.klee0kai.crossbox.core.CrossboxGenInterface
 import com.github.klee0kai.crossbox.core.CrossboxProxyClass
 import com.github.klee0kai.crossbox.core.InvokeFunctionEvent
 import com.github.klee0kai.crossbox.core.InvokeFunctionProcessor
-import com.github.klee0kai.crossbox.processor.ksp.GenSpec
-import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
-import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
+import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
+import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
+import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.poet.*
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.Dependencies
@@ -25,7 +25,7 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 
-class CrossboxProxyClassProcessor : TargetFileProcessor {
+class CrossboxProxyClassProcessor : TargetSymbolProcessor {
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,

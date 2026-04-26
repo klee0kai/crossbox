@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.serialization)
 }
 
 group = "com.klee0kai.crossbox.tests"
@@ -19,6 +20,7 @@ dependencies {
     ksp(project(":processor"))
 
     implementation(libs.bundles.kotlin)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.tablesaw.core)
     implementation(libs.joinery)
     implementation(libs.poi)

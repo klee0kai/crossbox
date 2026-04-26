@@ -4,9 +4,9 @@ package com.github.klee0kai.crossbox.processor.target
 
 import com.github.klee0kai.crossbox.core.CrossboxModel
 import com.github.klee0kai.crossbox.core.FieldInfo
-import com.github.klee0kai.crossbox.processor.ksp.GenSpec
-import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
-import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
+import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
+import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
+import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.poet.*
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.containingFile
@@ -23,7 +23,7 @@ import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 
-class CrossboxModelProcessor : TargetFileProcessor {
+class CrossboxModelProcessor : TargetSymbolProcessor {
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,
@@ -74,7 +74,7 @@ class CrossboxModelProcessor : TargetFileProcessor {
                                     "%T( %S , %T::class , listOf( %L ) ),\n",
                                     FieldInfo::class.asTypeName(),
                                     prop.name?.asString(),
-                                    prop.type.resolve().toTypeName().rawType().copy(nullable = false,),
+                                    prop.type.resolve().toTypeName().rawType().copy(nullable = false),
                                     prop.annotations.joinToString { it.toAnnotationSpec().toString().removePrefix("@") }
                                 )
                             }

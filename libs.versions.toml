@@ -2,13 +2,15 @@
 
 crossbox = "0.0.2"
 
-kotlin = "2.1.10"
-ksp = "2.1.10-1.0.30"
+kotlin = "2.3.20"
+ksp = "2.3.2"
 
 jetbrain-immutable = "0.3.7"
 jetbrain-coroutines = "1.10.1"
+kotlinx-serialization = "1.7.3"
 
 stone = "2.1.0"
+hummus = "0.0.10"
 kotlinpoet = "2.0.0"
 
 tablesaw = "0.43.1"
@@ -23,10 +25,14 @@ jupiter = "5.9.2"
 
 jetbrain-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "jetbrain-immutable" }
 jetbrain-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "jetbrain-coroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 # https://github.com/klee0kai/stone
 stone-kotlin = { group = "com.github.klee0kai.stone", name = "stone_multiplatform", version.ref = "stone" }
 stone-ksp = { group = "com.github.klee0kai.stone", name = "stone_ksp", version.ref = "stone" }
+
+hummus = { group = "com.github.klee0kai.hummus", name = "hummus", version.ref = "hummus" }
+hummus-ksp = { group = "com.github.klee0kai.hummus", name = "ksp-base", version.ref = "hummus" }
 
 ksp = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
 
@@ -51,6 +57,7 @@ kotlinpoet = ["kotlinpoet", "kotlinpoet-ksp"]
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 publish-maven = { id = "org.gradle.maven-publish" }
 publish-crossbox = { id = "com.github.klee0kai.crossbox.publish" }

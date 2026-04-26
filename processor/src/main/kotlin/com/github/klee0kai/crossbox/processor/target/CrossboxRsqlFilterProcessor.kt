@@ -4,9 +4,9 @@ package com.github.klee0kai.crossbox.processor.target
 
 import com.github.klee0kai.crossbox.core.CrossboxRsqlFilter
 import com.github.klee0kai.crossbox.core.tools.RsqlTools
-import com.github.klee0kai.crossbox.processor.ksp.GenSpec
-import com.github.klee0kai.crossbox.processor.ksp.SymbolsToProcess
-import com.github.klee0kai.crossbox.processor.ksp.TargetFileProcessor
+import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
+import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
+import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.poet.crossboxPackageName
 import com.github.klee0kai.crossbox.processor.poet.genFileSpec
 import com.github.klee0kai.crossbox.processor.poet.genFun
@@ -23,7 +23,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 
-class CrossboxRsqlFilterProcessor : TargetFileProcessor {
+class CrossboxRsqlFilterProcessor : TargetSymbolProcessor {
 
     override suspend fun findSymbolsToProcess(
         resolver: Resolver,
@@ -159,7 +159,10 @@ class CrossboxRsqlFilterProcessor : TargetFileProcessor {
                 returns(Boolean::class.asClassName())
 
                 addStatement("if (fieldValue == null) return false")
-                addStatement("if (remainingPath.isEmpty()) return %T.compareValues(fieldValue, operator, value)", RsqlTools::class)
+                addStatement(
+                    "if (remainingPath.isEmpty()) return %T.compareValues(fieldValue, operator, value)",
+                    RsqlTools::class
+                )
 
                 addStatement("val nextSegment = remainingPath.getOrNull(0) ?: return false")
 
