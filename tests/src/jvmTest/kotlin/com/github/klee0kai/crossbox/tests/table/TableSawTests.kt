@@ -3,8 +3,10 @@ package com.github.klee0kai.crossbox.tests.table
 import com.github.klee0kai.crossbox.example.SimpleModel
 import com.github.klee0kai.crossbox.example.crossbox.createEmptyTableSaw
 import com.github.klee0kai.crossbox.example.crossbox.toTableSaw
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import junit.framework.TestCase.assertEquals
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class TableSawTests {
 
@@ -54,7 +56,8 @@ class TableSawTests {
 
         assertEquals(3, table.rowCount())
         assertEquals(4, table.columnCount())
-        assertEquals(listOf("someIdField", "someNameField", "anyCountField", "somePrefixFlagsField"),
+        assertEquals(
+            listOf("someIdField", "someNameField", "anyCountField", "somePrefixFlagsField"),
             (0 until table.columnCount()).map { table.column(it).name() })
     }
 

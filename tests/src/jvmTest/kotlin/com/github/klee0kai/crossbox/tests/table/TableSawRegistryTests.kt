@@ -3,9 +3,9 @@ package com.github.klee0kai.crossbox.tests.table
 import com.github.klee0kai.crossbox.example.Address
 import com.github.klee0kai.crossbox.example.PersonWithAddress
 import com.github.klee0kai.crossbox.example.crossbox.TableSawRegistry
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TableSawRegistryTests {
 

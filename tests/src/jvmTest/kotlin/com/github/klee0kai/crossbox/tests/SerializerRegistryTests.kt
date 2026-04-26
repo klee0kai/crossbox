@@ -8,8 +8,10 @@ import com.github.klee0kai.crossbox.example.ProductModel
 import com.github.klee0kai.crossbox.example.UserModel
 import com.github.klee0kai.crossbox.example.crossbox.serializerRegistry
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * Tests for CrossboxSerializableProcessor and the generated serializer registry
@@ -55,7 +57,10 @@ class SerializerRegistryTests {
         )
 
         @Suppress("UNCHECKED_CAST")
-        val json = Json.encodeToString(serializerRegistry[UserModel::class]!! as kotlinx.serialization.KSerializer<UserModel>, user)
+        val json = Json.encodeToString(
+            serializerRegistry[UserModel::class]!! as kotlinx.serialization.KSerializer<UserModel>,
+            user
+        )
         assertNotNull(json)
         assertTrue(json.contains("john_doe"), "JSON should contain username")
         assertTrue(json.contains("john@example.com"), "JSON should contain email")
@@ -71,7 +76,10 @@ class SerializerRegistryTests {
         )
 
         @Suppress("UNCHECKED_CAST")
-        val json = Json.encodeToString(serializerRegistry[ProductModel::class]!! as kotlinx.serialization.KSerializer<ProductModel>, product)
+        val json = Json.encodeToString(
+            serializerRegistry[ProductModel::class]!! as kotlinx.serialization.KSerializer<ProductModel>,
+            product
+        )
         assertNotNull(json)
         assertTrue(json.contains("Laptop"), "JSON should contain product title")
         assertTrue(json.contains("999.99"), "JSON should contain price")
@@ -87,7 +95,10 @@ class SerializerRegistryTests {
         )
 
         @Suppress("UNCHECKED_CAST")
-        val json = Json.encodeToString(serializerRegistry[OrderModel::class]!! as kotlinx.serialization.KSerializer<OrderModel>, order)
+        val json = Json.encodeToString(
+            serializerRegistry[OrderModel::class]!! as kotlinx.serialization.KSerializer<OrderModel>,
+            order
+        )
         assertNotNull(json)
         assertTrue(json.contains("1000"), "JSON should contain order id")
         assertTrue(json.contains("5"), "JSON should contain quantity")
@@ -102,7 +113,10 @@ class SerializerRegistryTests {
         )
 
         @Suppress("UNCHECKED_CAST")
-        val json = Json.encodeToString(serializerRegistry[CategoryModel::class]!! as kotlinx.serialization.KSerializer<CategoryModel>, category)
+        val json = Json.encodeToString(
+            serializerRegistry[CategoryModel::class]!! as kotlinx.serialization.KSerializer<CategoryModel>,
+            category
+        )
         assertNotNull(json)
         assertTrue(json.contains("Electronics"), "JSON should contain category name")
     }
@@ -112,7 +126,10 @@ class SerializerRegistryTests {
         val userJson = """{"id":1,"username":"jane_doe","email":"jane@example.com"}"""
 
         @Suppress("UNCHECKED_CAST")
-        val user = Json.decodeFromString(serializerRegistry[UserModel::class]!! as kotlinx.serialization.KSerializer<UserModel>, userJson)
+        val user = Json.decodeFromString(
+            serializerRegistry[UserModel::class]!! as kotlinx.serialization.KSerializer<UserModel>,
+            userJson
+        )
         assertEquals(1L, user.id)
         assertEquals("jane_doe", user.username)
         assertEquals("jane@example.com", user.email)
@@ -123,7 +140,10 @@ class SerializerRegistryTests {
         val productJson = """{"id":200,"title":"Mouse","price":29.99,"inStock":true}"""
 
         @Suppress("UNCHECKED_CAST")
-        val product = Json.decodeFromString(serializerRegistry[ProductModel::class]!! as kotlinx.serialization.KSerializer<ProductModel>, productJson)
+        val product = Json.decodeFromString(
+            serializerRegistry[ProductModel::class]!! as kotlinx.serialization.KSerializer<ProductModel>,
+            productJson
+        )
         assertEquals(200L, product.id)
         assertEquals("Mouse", product.title)
         assertEquals(29.99, product.price)
@@ -192,7 +212,10 @@ class SerializerRegistryTests {
         val productJsonWithoutInStock = """{"id":300,"title":"Keyboard","price":79.99}"""
 
         @Suppress("UNCHECKED_CAST")
-        val product = Json.decodeFromString(serializerRegistry[ProductModel::class]!! as kotlinx.serialization.KSerializer<ProductModel>, productJsonWithoutInStock)
+        val product = Json.decodeFromString(
+            serializerRegistry[ProductModel::class]!! as kotlinx.serialization.KSerializer<ProductModel>,
+            productJsonWithoutInStock
+        )
         assertEquals(300L, product.id)
         assertEquals("Keyboard", product.title)
         assertEquals(79.99, product.price)

@@ -9,3 +9,4 @@ gradlePlugin {
         implementationClass = "com.github.klee0kai.crossbox.publish.CrossboxPublishPlugin"
     }
 }
+

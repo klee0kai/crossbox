@@ -4,15 +4,17 @@ import com.github.klee0kai.crossbox.example.SimpleModel
 import com.github.klee0kai.crossbox.example.crossbox.changes
 import com.github.klee0kai.crossbox.example.crossbox.crossboxFieldList
 import com.github.klee0kai.crossbox.example.crossbox.merge
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class SimpleModelsTests {
 
     @Test
     fun modelFieldListTest() {
         val list = SimpleModel.crossboxFieldList
-        assertEquals(listOf("someIdField", "someNameField", "anyCountField", "somePrefixFlagsField"), list.map { it.name })
+        assertEquals(
+            listOf("someIdField", "someNameField", "anyCountField", "somePrefixFlagsField"),
+            list.map { it.name })
     }
 
     @Test

@@ -56,8 +56,9 @@ kotlinpoet = ["kotlinpoet", "kotlinpoet-ksp"]
 [plugins]
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 publish-maven = { id = "org.gradle.maven-publish" }
 publish-crossbox = { id = "com.github.klee0kai.crossbox.publish" }

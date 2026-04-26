@@ -5,8 +5,8 @@ import com.github.klee0kai.crossbox.example.PersonComplex
 import com.github.klee0kai.crossbox.example.PersonWithAddress
 import com.github.klee0kai.crossbox.example.PersonWithTags
 import com.github.klee0kai.crossbox.example.crossbox.toTableSaw
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import kotlin.test.*
+
 
 class TableSawNestedTests {
 

@@ -6,8 +6,8 @@ import com.github.klee0kai.crossbox.example.PersonWithAddress
 import com.github.klee0kai.crossbox.example.PersonWithTags
 import com.github.klee0kai.crossbox.example.SimpleModel
 import com.github.klee0kai.crossbox.example.crossbox.toDataFrame
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import kotlin.test.*
+
 
 class DataFrameTests {
 
