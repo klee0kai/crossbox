@@ -50,6 +50,13 @@ class CrossboxTableSawRegistryProcessor : TargetSymbolProcessor {
         if (targetSymbols.isEmpty()) {
             return null
         }
+
+        println(
+            "CrossboxTableSawRegistryProcessor multiSymbolsProcess ${
+                targetSymbols.joinToString { (it as KSClassDeclaration).toClassName().simpleName }
+            }"
+        )
+
         val commonPkg = targetSymbols
             .mapNotNull { it.containingFile?.packageName?.asString() }
             .findCommonPgk()
