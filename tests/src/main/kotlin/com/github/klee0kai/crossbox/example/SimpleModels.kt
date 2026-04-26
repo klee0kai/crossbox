@@ -8,7 +8,9 @@ import com.github.klee0kai.crossbox.core.CrossboxTableSaw
 @CrossboxModel
 @CrossboxRsqlFilter
 @CrossboxTableSaw
-@CrossboxJoineryDataFrame
+@CrossboxJoineryDataFrame(
+    commonRegistry = true,
+)
 data class SimpleModel(
     val someIdField: Long? = null,
     val someNameField: String? = null,
@@ -49,7 +51,9 @@ data class Address(
 
 @CrossboxModel
 @CrossboxTableSaw
-@CrossboxJoineryDataFrame
+@CrossboxJoineryDataFrame(
+    commonRegistry = true,
+)
 data class PersonWithAddress(
     val id: Long? = null,
     val name: String? = null,
@@ -60,7 +64,9 @@ data class PersonWithAddress(
 
 @CrossboxModel
 @CrossboxTableSaw
-@CrossboxJoineryDataFrame
+@CrossboxJoineryDataFrame(
+    commonRegistry = true,
+)
 data class PersonWithTags(
     val id: Long? = null,
     val name: String? = null,
@@ -71,7 +77,9 @@ data class PersonWithTags(
 
 @CrossboxModel
 @CrossboxTableSaw
-@CrossboxJoineryDataFrame
+@CrossboxJoineryDataFrame(
+    commonRegistry = true,
+)
 data class PersonComplex(
     val id: Long? = null,
     val name: String? = null,

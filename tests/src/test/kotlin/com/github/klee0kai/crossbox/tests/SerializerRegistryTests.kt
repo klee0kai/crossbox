@@ -6,7 +6,7 @@ import com.github.klee0kai.crossbox.example.CategoryModel
 import com.github.klee0kai.crossbox.example.OrderModel
 import com.github.klee0kai.crossbox.example.ProductModel
 import com.github.klee0kai.crossbox.example.UserModel
-import com.github.klee0kai.crossbox.example.serializerRegistry
+import com.github.klee0kai.crossbox.example.crossbox.serializerRegistry
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

@@ -1,11 +1,11 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor.target
+package com.github.klee0kai.crossbox.processor.target.proxy
 
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
 import com.github.klee0kai.crossbox.core.CrossboxProxyClass
-import com.github.klee0kai.crossbox.core.InvokeFunctionEvent
-import com.github.klee0kai.crossbox.core.InvokeFunctionProcessor
+import com.github.klee0kai.crossbox.core.proxies.InvokeFunctionEvent
+import com.github.klee0kai.crossbox.core.proxies.InvokeFunctionProcessor
 import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor

@@ -1,4 +1,4 @@
-package com.github.klee0kai.crossbox.core
+package com.github.klee0kai.crossbox.core.field
 
 import kotlin.reflect.KClass
 

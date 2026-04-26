@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor.target
+package com.github.klee0kai.crossbox.processor.target.proxy
 
 import com.github.klee0kai.crossbox.core.CrossboxAsyncInterface
 import com.github.klee0kai.crossbox.core.CrossboxGenInterface
@@ -8,6 +8,10 @@ import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.poet.*
+import com.github.klee0kai.crossbox.processor.poet.asyncReturnType
+import com.github.klee0kai.crossbox.processor.poet.declareSameParameters
+import com.github.klee0kai.crossbox.processor.poet.genProxyProperty
+import com.github.klee0kai.crossbox.processor.poet.isSuspend
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger

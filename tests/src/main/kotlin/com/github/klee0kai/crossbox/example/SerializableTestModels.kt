@@ -1,10 +1,10 @@
 package com.github.klee0kai.crossbox.example
 
-import com.github.klee0kai.crossbox.core.CrossboxSerializable
+import com.github.klee0kai.crossbox.core.CrossboxSerializableRegistry
 import kotlinx.serialization.Serializable
 
 @Serializable
-@CrossboxSerializable
+@CrossboxSerializableRegistry
 data class UserModel(
     val id: Long,
     val username: String,
@@ -12,7 +12,7 @@ data class UserModel(
 )
 
 @Serializable
-@CrossboxSerializable
+@CrossboxSerializableRegistry
 data class ProductModel(
     val id: Long,
     val title: String,
@@ -21,7 +21,7 @@ data class ProductModel(
 )
 
 @Serializable
-@CrossboxSerializable
+@CrossboxSerializableRegistry
 data class OrderModel(
     val id: Long,
     val userId: Long,
@@ -30,7 +30,7 @@ data class OrderModel(
 )
 
 @Serializable
-@CrossboxSerializable
+@CrossboxSerializableRegistry
 data class CategoryModel(
     val id: Long,
     val name: String,

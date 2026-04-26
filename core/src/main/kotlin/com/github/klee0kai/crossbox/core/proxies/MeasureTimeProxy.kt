@@ -1,7 +1,5 @@
 package com.github.klee0kai.crossbox.core.proxies
 
-import com.github.klee0kai.crossbox.core.InvokeFunctionEvent
-import com.github.klee0kai.crossbox.core.InvokeFunctionProcessor
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 

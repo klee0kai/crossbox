@@ -1,7 +1,5 @@
 package com.github.klee0kai.crossbox.core.proxies
 
-import com.github.klee0kai.crossbox.core.InvokeFunctionEvent
-import com.github.klee0kai.crossbox.core.InvokeFunctionProcessor
 import java.util.concurrent.locks.ReentrantLock
 
 open class SynchronizedProxy(

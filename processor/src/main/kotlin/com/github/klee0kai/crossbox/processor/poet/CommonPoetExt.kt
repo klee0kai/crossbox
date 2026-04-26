@@ -1,8 +1,5 @@
-package com.github.klee0kai.crossbox.processor.target
+package com.github.klee0kai.crossbox.processor.poet
 
-import com.github.klee0kai.crossbox.processor.poet.genGetter
-import com.github.klee0kai.crossbox.processor.poet.genProperty
-import com.github.klee0kai.crossbox.processor.poet.genSetter
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Modifier

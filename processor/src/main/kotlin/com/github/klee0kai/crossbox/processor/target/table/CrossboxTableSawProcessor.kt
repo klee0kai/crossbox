@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor.target
+package com.github.klee0kai.crossbox.processor.target.table
 
 import com.github.klee0kai.crossbox.core.CrossboxModel
 import com.github.klee0kai.crossbox.core.CrossboxTableSaw
@@ -20,6 +20,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
@@ -232,7 +233,7 @@ class CrossboxTableSawProcessor : TargetSymbolProcessor {
     }
 
     private fun generateAppendCodeInline(
-        builder: com.squareup.kotlinpoet.FunSpec.Builder,
+        builder: FunSpec.Builder,
         expandedProp: ExpandedProperty,
         columnType: ClassName
     ) {

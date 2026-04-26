@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor.target
+package com.github.klee0kai.crossbox.processor.target.rsql
 
 import com.github.klee0kai.crossbox.core.CrossboxRsqlFilter
 import com.github.klee0kai.crossbox.core.tools.RsqlTools

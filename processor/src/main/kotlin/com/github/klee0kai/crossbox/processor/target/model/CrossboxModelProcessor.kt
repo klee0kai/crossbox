@@ -1,9 +1,9 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor.target
+package com.github.klee0kai.crossbox.processor.target.model
 
 import com.github.klee0kai.crossbox.core.CrossboxModel
-import com.github.klee0kai.crossbox.core.FieldInfo
+import com.github.klee0kai.crossbox.core.field.FieldInfo
 import com.github.klee0kai.crossbox.processor.ksp.arch.GenSpec
 import com.github.klee0kai.crossbox.processor.ksp.arch.SymbolsToProcess
 import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor

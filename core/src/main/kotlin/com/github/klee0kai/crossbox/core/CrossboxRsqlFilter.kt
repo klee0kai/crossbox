@@ -126,4 +126,6 @@ package com.github.klee0kai.crossbox.core
 @MustBeDocumented
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS)
-annotation class CrossboxRsqlFilter
+annotation class CrossboxRsqlFilter(
+    val commonRegistry: Boolean = false,
+)

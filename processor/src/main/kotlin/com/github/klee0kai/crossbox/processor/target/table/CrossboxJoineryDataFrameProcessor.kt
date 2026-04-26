@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.github.klee0kai.crossbox.processor.target
+package com.github.klee0kai.crossbox.processor.target.table
 
 import com.github.klee0kai.crossbox.core.CrossboxJoineryDataFrame
 import com.github.klee0kai.crossbox.core.CrossboxModel
@@ -26,6 +26,11 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 
 class CrossboxJoineryDataFrameProcessor : TargetSymbolProcessor {
+
+    companion object {
+        val dataFrameClazz = ClassName("joinery", "DataFrame")
+            .parameterizedBy(Any::class.asClassName().copy(nullable = true))
+    }
 
     data class ExpandedProperty(
         val originalName: String,
@@ -80,8 +85,6 @@ class CrossboxJoineryDataFrameProcessor : TargetSymbolProcessor {
         val fileSpec = genFileSpec(packageName, joineryClName.simpleName) {
             genLibComment()
 
-            val dataFrameClazz = ClassName("joinery", "DataFrame")
-                .parameterizedBy(Any::class.asClassName().copy(nullable = true))
             val listClazz = ClassName("java.util", "ArrayList")
 
             // Function to convert Iterable<Model> to DataFrame
@@ -93,7 +96,11 @@ class CrossboxJoineryDataFrameProcessor : TargetSymbolProcessor {
                 returns(dataFrameClazz)
 
                 // Create column data structure: Map<String, MutableList<Any?>>
-                addStatement("val columnData = mutableMapOf<%T, %T>()", String::class.asClassName(), List::class.asClassName().parameterizedBy(Any::class.asClassName().copy(nullable = true)))
+                addStatement(
+                    "val columnData = mutableMapOf<%T, %T>()",
+                    String::class.asClassName(),
+                    List::class.asClassName().parameterizedBy(Any::class.asClassName().copy(nullable = true))
+                )
 
                 // Initialize each column list
                 flatProperties.forEach { prop ->
@@ -109,7 +116,9 @@ class CrossboxJoineryDataFrameProcessor : TargetSymbolProcessor {
                 endControlFlow()
 
                 // Convert map to list of column lists
-                addStatement("val data = listOf(%L)", flatProperties.joinToString(", ") { "columnData[\"${it.columnName}\"] ?: emptyList<Any?>()" })
+                addStatement(
+                    "val data = listOf(%L)",
+                    flatProperties.joinToString(", ") { "columnData[\"${it.columnName}\"] ?: emptyList<Any?>()" })
 
                 // Create DataFrame using Joinery API
                 addStatement("val columns = listOf(%L)", flatProperties.joinToString(", ") { "\"${it.columnName}\"" })
