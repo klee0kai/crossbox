@@ -14,6 +14,7 @@ pluginManagement {
             }
         }
         maven(url = "https://jitpack.io")
+        mavenLocal()
     }
 }
 
@@ -32,6 +33,7 @@ dependencyResolutionManagement {
             }
         }
         maven(url = "https://jitpack.io")
+        mavenLocal()
     }
     versionCatalogs {
         create("libs") {
