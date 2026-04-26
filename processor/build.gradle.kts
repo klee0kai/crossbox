@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.jvm)
+    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.publish.maven)
     alias(libs.plugins.publish.crossbox)
 }
@@ -7,11 +7,20 @@ plugins {
 group = "com.github.klee0kai.crossbox.processor"
 version = libs.versions.crossbox.get()
 
-dependencies {
-    implementation(project(":core"))
+kotlin {
+    jvm()
 
-    implementation(libs.bundles.kotlin)
-    implementation(libs.bundles.kotlinpoet)
-    implementation(libs.ksp)
+    sourceSets {
+        val jvmMain by getting {
+            dependencies {
+                implementation(project(":core"))
+
+                implementation(libs.bundles.kotlin)
+                implementation(libs.bundles.kotlinpoet)
+                implementation(libs.ksp)
+                implementation(libs.hummus.ksp)
+            }
+        }
+    }
 
 }

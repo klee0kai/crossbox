@@ -1,6 +1,5 @@
 plugins {
-    alias(libs.plugins.jvm)
-
+    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.publish.maven)
     alias(libs.plugins.publish.crossbox)
 }
@@ -8,6 +7,23 @@ plugins {
 group = "com.github.klee0kai.crossbox.core"
 version = libs.versions.crossbox.get()
 
-dependencies {
-    implementation(libs.bundles.kotlin)
+kotlin {
+    jvm()
+    js(IR) {
+        browser()
+        nodejs()
+        binaries.executable()
+    }
+    wasmJs {
+        browser()
+        nodejs()
+        binaries.executable()
+    }
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.bundles.kotlin)
+        }
+    }
 }
+

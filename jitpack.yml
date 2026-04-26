@@ -1,0 +1,11 @@
+jdk:
+  - openjdk17
+
+install:
+  - wget https://nodejs.org/dist/v24.10.0/node-v24.10.0-linux-x64.tar.xz
+  - tar -xJf node-v24.10.0-linux-x64.tar.xz1
+  - export PATH=$PWD/node-v24.10.0-linux-x64/bin:$PATH
+  - echo "node installed"
+  - echo $(node -v)
+  - echo "publish"
+  - ./gradlew publishToMavenLocal
