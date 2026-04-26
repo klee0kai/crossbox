@@ -1,11 +1,11 @@
-package com.github.klee0kai.crossbox.tests
+package com.github.klee0kai.crossbox.tests.rsql
 
 import com.github.klee0kai.crossbox.core.tools.RsqlTools
-import com.github.klee0kai.crossbox.example.SimpleModel
 import com.github.klee0kai.crossbox.example.DeepRsqlModel
+import com.github.klee0kai.crossbox.example.SimpleModel
 import com.github.klee0kai.crossbox.example.crossbox.filterByRsqlQuery
 import com.github.klee0kai.crossbox.example.crossbox.matchesRsqlQuery
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -23,10 +23,10 @@ class RsqlFilterTests {
             val query = "someNameField==Alice;someIdField=gt=100;somePrefixFlagsField!=5"
             val result = RsqlTools.parseRsqlQuery(query)
 
-            assertEquals(3, result.size)
-            assertEquals("someNameField==Alice", result[0])
-            assertEquals("someIdField=gt=100", result[1])
-            assertEquals("somePrefixFlagsField!=5", result[2])
+            Assertions.assertEquals(3, result.size)
+            Assertions.assertEquals("someNameField==Alice", result[0])
+            Assertions.assertEquals("someIdField=gt=100", result[1])
+            Assertions.assertEquals("somePrefixFlagsField!=5", result[2])
         }
 
         @Test
@@ -35,9 +35,9 @@ class RsqlFilterTests {
             val query = " someNameField==Alice ; someIdField=gt=100 "
             val result = RsqlTools.parseRsqlQuery(query)
 
-            assertEquals(2, result.size)
-            assertEquals("someNameField==Alice", result[0])
-            assertEquals("someIdField=gt=100", result[1])
+            Assertions.assertEquals(2, result.size)
+            Assertions.assertEquals("someNameField==Alice", result[0])
+            Assertions.assertEquals("someIdField=gt=100", result[1])
         }
 
         @Test
@@ -46,8 +46,8 @@ class RsqlFilterTests {
             val query = "someNameField==Alice;;someIdField=gt=100"
             val result = RsqlTools.parseRsqlQuery(query)
 
-            assertEquals(2, result.size)
-            assertTrue(result.all { it.isNotEmpty() })
+            Assertions.assertEquals(2, result.size)
+            Assertions.assertTrue(result.all { it.isNotEmpty() })
         }
 
         @Test
@@ -56,9 +56,9 @@ class RsqlFilterTests {
             val expr = "someNameField==Alice"
             val result = RsqlTools.parseSingleExpression(expr)
 
-            assertEquals("someNameField", result["field"])
-            assertEquals("==", result["operator"])
-            assertEquals("Alice", result["value"])
+            Assertions.assertEquals("someNameField", result["field"])
+            Assertions.assertEquals("==", result["operator"])
+            Assertions.assertEquals("Alice", result["value"])
         }
 
         @Test
@@ -70,9 +70,9 @@ class RsqlFilterTests {
                 val expr = "field${op}value"
                 val result = RsqlTools.parseSingleExpression(expr)
 
-                assertEquals("field", result["field"], "Failed for operator: $op")
-                assertEquals(op, result["operator"], "Failed for operator: $op")
-                assertEquals("value", result["value"], "Failed for operator: $op")
+                Assertions.assertEquals("field", result["field"], "Failed for operator: $op")
+                Assertions.assertEquals(op, result["operator"], "Failed for operator: $op")
+                Assertions.assertEquals("value", result["value"], "Failed for operator: $op")
             }
         }
 
@@ -82,9 +82,9 @@ class RsqlFilterTests {
             val expr = "  someNameField  ==  Alice  "
             val result = RsqlTools.parseSingleExpression(expr)
 
-            assertEquals("someNameField", result["field"])
-            assertEquals("==", result["operator"])
-            assertEquals("Alice", result["value"])
+            Assertions.assertEquals("someNameField", result["field"])
+            Assertions.assertEquals("==", result["operator"])
+            Assertions.assertEquals("Alice", result["value"])
         }
 
         @Test
@@ -93,7 +93,7 @@ class RsqlFilterTests {
             val expr = "invalid expression without operator"
             val result = RsqlTools.parseSingleExpression(expr)
 
-            assertTrue(result.isEmpty())
+            Assertions.assertTrue(result.isEmpty())
         }
     }
 
@@ -106,8 +106,8 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryEquality() {
             val item = SimpleModel(someNameField = "Alice", someIdField = 100L)
 
-            assertTrue(item.matchesRsqlQuery("someNameField==Alice"))
-            assertFalse(item.matchesRsqlQuery("someNameField==Bob"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField==Alice"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField==Bob"))
         }
 
         @Test
@@ -115,8 +115,8 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryNotEqual() {
             val item = SimpleModel(someNameField = "Alice", someIdField = 100L)
 
-            assertTrue(item.matchesRsqlQuery("someNameField!=Bob"))
-            assertFalse(item.matchesRsqlQuery("someNameField!=Alice"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField!=Bob"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField!=Alice"))
         }
 
         @Test
@@ -124,9 +124,9 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryGreaterThan() {
             val item = SimpleModel(someIdField = 100L)
 
-            assertTrue(item.matchesRsqlQuery("someIdField=gt=50"))
-            assertFalse(item.matchesRsqlQuery("someIdField=gt=100"))
-            assertFalse(item.matchesRsqlQuery("someIdField=gt=150"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=gt=50"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someIdField=gt=100"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someIdField=gt=150"))
         }
 
         @Test
@@ -134,9 +134,9 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryGreaterOrEqual() {
             val item = SimpleModel(someIdField = 100L)
 
-            assertTrue(item.matchesRsqlQuery("someIdField=gte=50"))
-            assertTrue(item.matchesRsqlQuery("someIdField=gte=100"))
-            assertFalse(item.matchesRsqlQuery("someIdField=gte=150"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=gte=50"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=gte=100"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someIdField=gte=150"))
         }
 
         @Test
@@ -144,9 +144,9 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryLessThan() {
             val item = SimpleModel(someIdField = 100L)
 
-            assertTrue(item.matchesRsqlQuery("someIdField=lt=150"))
-            assertFalse(item.matchesRsqlQuery("someIdField=lt=100"))
-            assertFalse(item.matchesRsqlQuery("someIdField=lt=50"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=lt=150"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someIdField=lt=100"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someIdField=lt=50"))
         }
 
         @Test
@@ -154,9 +154,9 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryLessOrEqual() {
             val item = SimpleModel(someIdField = 100L)
 
-            assertTrue(item.matchesRsqlQuery("someIdField=lte=150"))
-            assertTrue(item.matchesRsqlQuery("someIdField=lte=100"))
-            assertFalse(item.matchesRsqlQuery("someIdField=lte=50"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=lte=150"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=lte=100"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someIdField=lte=50"))
         }
 
         @Test
@@ -164,8 +164,8 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryIn() {
             val item = SimpleModel(someNameField = "Alice")
 
-            assertTrue(item.matchesRsqlQuery("someNameField=in=Alice,Bob,Charlie"))
-            assertFalse(item.matchesRsqlQuery("someNameField=in=Bob,Charlie"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField=in=Alice,Bob,Charlie"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField=in=Bob,Charlie"))
         }
 
         @Test
@@ -173,8 +173,8 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryNotIn() {
             val item = SimpleModel(someNameField = "Alice")
 
-            assertTrue(item.matchesRsqlQuery("someNameField=out=Bob,Charlie"))
-            assertFalse(item.matchesRsqlQuery("someNameField=out=Alice,Bob"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField=out=Bob,Charlie"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField=out=Alice,Bob"))
         }
 
         @Test
@@ -183,13 +183,13 @@ class RsqlFilterTests {
             val item = SimpleModel(someNameField = "Alice", someIdField = 100L, somePrefixFlagsField = 10)
 
             // All conditions match
-            assertTrue(item.matchesRsqlQuery("someNameField==Alice;someIdField=gt=50;somePrefixFlagsField==10"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField==Alice;someIdField=gt=50;somePrefixFlagsField==10"))
 
             // One condition fails
-            assertFalse(item.matchesRsqlQuery("someNameField==Alice;someIdField=gt=150;somePrefixFlagsField==10"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField==Alice;someIdField=gt=150;somePrefixFlagsField==10"))
 
             // Multiple conditions fail
-            assertFalse(item.matchesRsqlQuery("someNameField==Bob;someIdField=lt=50;somePrefixFlagsField==20"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField==Bob;someIdField=lt=50;somePrefixFlagsField==20"))
         }
 
         @Test
@@ -197,7 +197,7 @@ class RsqlFilterTests {
         fun testMatchesRsqlQueryEmptyQuery() {
             val item = SimpleModel(someNameField = "Alice")
 
-            assertTrue(item.matchesRsqlQuery(""))
+            Assertions.assertTrue(item.matchesRsqlQuery(""))
         }
 
         @Test
@@ -206,10 +206,10 @@ class RsqlFilterTests {
             val item = SimpleModel(someNameField = null, someIdField = 100L)
 
             // Null field doesn't match equality
-            assertFalse(item.matchesRsqlQuery("someNameField==Alice"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField==Alice"))
 
             // Other fields still work
-            assertTrue(item.matchesRsqlQuery("someIdField==100"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField==100"))
         }
     }
 
@@ -229,8 +229,8 @@ class RsqlFilterTests {
         fun testFilterEquality() {
             val result = models.filterByRsqlQuery("someNameField==Alice")
 
-            assertEquals(1, result.size)
-            assertEquals("Alice", result[0].someNameField)
+            Assertions.assertEquals(1, result.size)
+            Assertions.assertEquals("Alice", result[0].someNameField)
         }
 
         @Test
@@ -238,8 +238,8 @@ class RsqlFilterTests {
         fun testFilterGreaterThan() {
             val result = models.filterByRsqlQuery("someIdField=gt=1500")
 
-            assertEquals(2, result.size)
-            assertTrue(result.all { it.someIdField!! > 1500 })
+            Assertions.assertEquals(2, result.size)
+            Assertions.assertTrue(result.all { it.someIdField!! > 1500 })
         }
 
         @Test
@@ -247,8 +247,8 @@ class RsqlFilterTests {
         fun testFilterRange() {
             val result = models.filterByRsqlQuery("someIdField=gte=1000;someIdField=lte=2000")
 
-            assertEquals(3, result.size)
-            assertTrue(result.all { it.someIdField!! in 1000..2000 })
+            Assertions.assertEquals(3, result.size)
+            Assertions.assertTrue(result.all { it.someIdField!! in 1000..2000 })
         }
 
         @Test
@@ -256,8 +256,8 @@ class RsqlFilterTests {
         fun testFilterIn() {
             val result = models.filterByRsqlQuery("someNameField=in=Alice,Bob")
 
-            assertEquals(2, result.size)
-            assertTrue(result.all { it.someNameField in listOf("Alice", "Bob") })
+            Assertions.assertEquals(2, result.size)
+            Assertions.assertTrue(result.all { it.someNameField in listOf("Alice", "Bob") })
         }
 
         @Test
@@ -265,8 +265,8 @@ class RsqlFilterTests {
         fun testFilterNotIn() {
             val result = models.filterByRsqlQuery("someNameField=out=Alice,Bob")
 
-            assertEquals(2, result.size)
-            assertTrue(result.all { it.someNameField !in listOf("Alice", "Bob") })
+            Assertions.assertEquals(2, result.size)
+            Assertions.assertTrue(result.all { it.someNameField !in listOf("Alice", "Bob") })
         }
 
         @Test
@@ -274,8 +274,8 @@ class RsqlFilterTests {
         fun testFilterMultipleConditions() {
             val result = models.filterByRsqlQuery("someIdField=gte=1500;someNameField!=Alice")
 
-            assertEquals(3, result.size)
-            assertTrue(result.all { it.someIdField!! >= 1500 && it.someNameField != "Alice" })
+            Assertions.assertEquals(3, result.size)
+            Assertions.assertTrue(result.all { it.someIdField!! >= 1500 && it.someNameField != "Alice" })
         }
 
         @Test
@@ -283,7 +283,7 @@ class RsqlFilterTests {
         fun testFilterNoMatches() {
             val result = models.filterByRsqlQuery("someNameField==NonExistent")
 
-            assertTrue(result.isEmpty())
+            Assertions.assertTrue(result.isEmpty())
         }
 
         @Test
@@ -291,7 +291,7 @@ class RsqlFilterTests {
         fun testFilterAllMatch() {
             val result = models.filterByRsqlQuery("someIdField=gt=0")
 
-            assertEquals(4, result.size)
+            Assertions.assertEquals(4, result.size)
         }
 
         @Test
@@ -299,7 +299,7 @@ class RsqlFilterTests {
         fun testFilterEmptyQuery() {
             val result = models.filterByRsqlQuery("")
 
-            assertEquals(4, result.size)
+            Assertions.assertEquals(4, result.size)
         }
 
         @Test
@@ -307,7 +307,7 @@ class RsqlFilterTests {
         fun testFilterEmptyCollection() {
             val result = emptyList<SimpleModel>().filterByRsqlQuery("name==Alice")
 
-            assertTrue(result.isEmpty())
+            Assertions.assertTrue(result.isEmpty())
         }
     }
 
@@ -320,9 +320,9 @@ class RsqlFilterTests {
         fun testNumericComparisonLong() {
             val item = SimpleModel(someIdField = 100L)
 
-            assertTrue(item.matchesRsqlQuery("someIdField=gt=99"))
-            assertTrue(item.matchesRsqlQuery("someIdField=lt=101"))
-            assertTrue(item.matchesRsqlQuery("someIdField==100"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=gt=99"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=lt=101"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField==100"))
         }
 
         @Test
@@ -331,10 +331,10 @@ class RsqlFilterTests {
             val item = SimpleModel(somePrefixFlagsField = 10)
 
             // Short type comparison works with string equality
-            assertTrue(item.matchesRsqlQuery("somePrefixFlagsField==10"))
-            assertFalse(item.matchesRsqlQuery("somePrefixFlagsField==11"))
+            Assertions.assertTrue(item.matchesRsqlQuery("somePrefixFlagsField==10"))
+            Assertions.assertFalse(item.matchesRsqlQuery("somePrefixFlagsField==11"))
             // String-based IN operator works
-            assertTrue(item.matchesRsqlQuery("somePrefixFlagsField=in=10,20,30"))
+            Assertions.assertTrue(item.matchesRsqlQuery("somePrefixFlagsField=in=10,20,30"))
         }
 
         @Test
@@ -343,8 +343,8 @@ class RsqlFilterTests {
             val itemWithNull = SimpleModel(someNameField = null)
             val itemWithValue = SimpleModel(someNameField = "Alice")
 
-            assertFalse(itemWithNull.matchesRsqlQuery("someNameField==Alice"))
-            assertTrue(itemWithValue.matchesRsqlQuery("someNameField==Alice"))
+            Assertions.assertFalse(itemWithNull.matchesRsqlQuery("someNameField==Alice"))
+            Assertions.assertTrue(itemWithValue.matchesRsqlQuery("someNameField==Alice"))
         }
 
         @Test
@@ -352,8 +352,8 @@ class RsqlFilterTests {
         fun testNumberInOperator() {
             val item = SimpleModel(somePrefixFlagsField = 10)
 
-            assertTrue(item.matchesRsqlQuery("somePrefixFlagsField=in=10,20,30"))
-            assertFalse(item.matchesRsqlQuery("somePrefixFlagsField=in=20,30,40"))
+            Assertions.assertTrue(item.matchesRsqlQuery("somePrefixFlagsField=in=10,20,30"))
+            Assertions.assertFalse(item.matchesRsqlQuery("somePrefixFlagsField=in=20,30,40"))
         }
     }
 
@@ -367,7 +367,7 @@ class RsqlFilterTests {
             val item = SimpleModel(someNameField = "Alice,Bob")
 
             // Direct equality should work
-            assertTrue(item.matchesRsqlQuery("someNameField==Alice,Bob"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField==Alice,Bob"))
         }
 
         @Test
@@ -375,7 +375,7 @@ class RsqlFilterTests {
         fun testSpacesInValue() {
             val item = SimpleModel(someNameField = "Alice Cooper")
 
-            assertTrue(item.matchesRsqlQuery("someNameField==Alice Cooper"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField==Alice Cooper"))
         }
 
         @Test
@@ -383,7 +383,7 @@ class RsqlFilterTests {
         fun testInvalidFieldName() {
             val item = SimpleModel(someNameField = "Alice")
 
-            assertFalse(item.matchesRsqlQuery("invalidField==Alice"))
+            Assertions.assertFalse(item.matchesRsqlQuery("invalidField==Alice"))
         }
 
         @Test
@@ -392,8 +392,8 @@ class RsqlFilterTests {
             val item = SimpleModel(someIdField = 100L)
 
             // Both conditions on someIdField must be true
-            assertTrue(item.matchesRsqlQuery("someIdField=gte=50;someIdField=lte=150"))
-            assertFalse(item.matchesRsqlQuery("someIdField=gte=100;someIdField=lt=100"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someIdField=gte=50;someIdField=lte=150"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someIdField=gte=100;someIdField=lt=100"))
         }
 
         @Test
@@ -401,9 +401,9 @@ class RsqlFilterTests {
         fun testCaseSensitivityFieldNames() {
             val item = SimpleModel(someNameField = "Alice")
 
-            assertTrue(item.matchesRsqlQuery("someNameField==Alice"))
-            assertFalse(item.matchesRsqlQuery("somenamefield==Alice"))
-            assertFalse(item.matchesRsqlQuery("SOMENAMEFD==Alice"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField==Alice"))
+            Assertions.assertFalse(item.matchesRsqlQuery("somenamefield==Alice"))
+            Assertions.assertFalse(item.matchesRsqlQuery("SOMENAMEFD==Alice"))
         }
 
         @Test
@@ -411,9 +411,9 @@ class RsqlFilterTests {
         fun testCaseSensitivityValues() {
             val item = SimpleModel(someNameField = "Alice")
 
-            assertTrue(item.matchesRsqlQuery("someNameField==Alice"))
-            assertFalse(item.matchesRsqlQuery("someNameField==alice"))
-            assertFalse(item.matchesRsqlQuery("someNameField==ALICE"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField==Alice"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField==alice"))
+            Assertions.assertFalse(item.matchesRsqlQuery("someNameField==ALICE"))
         }
     }
 
@@ -450,10 +450,10 @@ class RsqlFilterTests {
             val result =
                 models.filterByRsqlQuery("someIdField=gte=1500;someNameField!=Alice;somePrefixFlagsField=in=15,20,30")
 
-            assertEquals(3, result.size)
-            assertTrue(result.all { it.someIdField!! >= 1500 })
-            assertTrue(result.all { it.someNameField != "Alice" })
-            assertTrue(result.all { it.somePrefixFlagsField!! in listOf<Short>(15, 20, 30) })
+            Assertions.assertEquals(3, result.size)
+            Assertions.assertTrue(result.all { it.someIdField!! >= 1500 })
+            Assertions.assertTrue(result.all { it.someNameField != "Alice" })
+            Assertions.assertTrue(result.all { it.somePrefixFlagsField!! in listOf<Short>(15, 20, 30) })
         }
 
         @Test
@@ -465,10 +465,10 @@ class RsqlFilterTests {
             )
 
             val filtered = models.filterByRsqlQuery("someIdField=gt=1500")
-            assertEquals(1, filtered.size)
+            Assertions.assertEquals(1, filtered.size)
 
             val item = filtered[0]
-            assertTrue(item.matchesRsqlQuery("someNameField==Bob"))
+            Assertions.assertTrue(item.matchesRsqlQuery("someNameField==Bob"))
         }
 
         @Test
@@ -483,9 +483,9 @@ class RsqlFilterTests {
             val query = "someIdField=gte=1000;someIdField=lte=2000"
             val inRange = models.filterByRsqlQuery(query)
 
-            assertEquals(3, inRange.size)
+            Assertions.assertEquals(3, inRange.size)
             inRange.forEach { model ->
-                assertTrue(model.matchesRsqlQuery(query))
+                Assertions.assertTrue(model.matchesRsqlQuery(query))
             }
         }
     }
@@ -500,9 +500,9 @@ class RsqlFilterTests {
             val expr = "children[*].someNameField==Alice"
             val result = RsqlTools.parseSingleExpression(expr)
 
-            assertEquals("children[*].someNameField", result["field"])
-            assertEquals("==", result["operator"])
-            assertEquals("Alice", result["value"])
+            Assertions.assertEquals("children[*].someNameField", result["field"])
+            Assertions.assertEquals("==", result["operator"])
+            Assertions.assertEquals("Alice", result["value"])
         }
 
         @Test
@@ -511,9 +511,9 @@ class RsqlFilterTests {
             val expr = "parent.nestedField==value"
             val result = RsqlTools.parseSingleExpression(expr)
 
-            assertEquals("parent.nestedField", result["field"])
-            assertEquals("==", result["operator"])
-            assertEquals("value", result["value"])
+            Assertions.assertEquals("parent.nestedField", result["field"])
+            Assertions.assertEquals("==", result["operator"])
+            Assertions.assertEquals("value", result["value"])
         }
 
         @Test
@@ -522,9 +522,9 @@ class RsqlFilterTests {
             val expr = "level1[*].level2.level3==test"
             val result = RsqlTools.parseSingleExpression(expr)
 
-            assertEquals("level1[*].level2.level3", result["field"])
-            assertEquals("==", result["operator"])
-            assertEquals("test", result["value"])
+            Assertions.assertEquals("level1[*].level2.level3", result["field"])
+            Assertions.assertEquals("==", result["operator"])
+            Assertions.assertEquals("test", result["value"])
         }
 
         @Test
@@ -552,8 +552,8 @@ class RsqlFilterTests {
 
             // Test matching models that have children with specific name
             val result = models.filterByRsqlQuery("children[*].someNameField==Alice")
-            assertEquals(1, result.size)
-            assertEquals(1L, result[0].commonId)
+            Assertions.assertEquals(1, result.size)
+            Assertions.assertEquals(1L, result[0].commonId)
         }
 
         @Test
@@ -577,7 +577,7 @@ class RsqlFilterTests {
 
             // Find models that have at least one child with id > 150
             val result = models.filterByRsqlQuery("children[*].someIdField=gt=150")
-            assertEquals(2, result.size)
+            Assertions.assertEquals(2, result.size)
         }
 
         @Test
@@ -602,8 +602,8 @@ class RsqlFilterTests {
 
             // Find models that have recursive children with specific id
             val result = models.filterByRsqlQuery("recursiveChildren[*].commonId==10")
-            assertEquals(1, result.size)
-            assertEquals(1L, result[0].commonId)
+            Assertions.assertEquals(1, result.size)
+            Assertions.assertEquals(1L, result[0].commonId)
         }
 
         @Test
@@ -627,7 +627,7 @@ class RsqlFilterTests {
 
             // Find models matching multiple conditions
             val result = models.filterByRsqlQuery("commonId=gte=1;children[*].someIdField=gt=150")
-            assertEquals(2, result.size)
+            Assertions.assertEquals(2, result.size)
         }
 
         @Test
@@ -638,7 +638,7 @@ class RsqlFilterTests {
                 children = null
             )
 
-            assertFalse(model.matchesRsqlQuery("children[*].someNameField==Alice"))
+            Assertions.assertFalse(model.matchesRsqlQuery("children[*].someNameField==Alice"))
         }
 
         @Test
@@ -649,7 +649,7 @@ class RsqlFilterTests {
                 children = null
             )
 
-            assertFalse(model.matchesRsqlQuery("children[*].someNameField!=Unknown"))
+            Assertions.assertFalse(model.matchesRsqlQuery("children[*].someNameField!=Unknown"))
         }
     }
 

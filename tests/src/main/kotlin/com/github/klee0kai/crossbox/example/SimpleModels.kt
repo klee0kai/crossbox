@@ -6,7 +6,7 @@ import com.github.klee0kai.crossbox.core.CrossboxRsqlFilter
 import com.github.klee0kai.crossbox.core.CrossboxTableSaw
 
 @CrossboxModel
-@CrossboxRsqlFilter
+@CrossboxRsqlFilter(commonRegistry = true)
 @CrossboxTableSaw(commonRegistry = true)
 @CrossboxJoineryDataFrame(commonRegistry = true)
 data class SimpleModel(
@@ -27,7 +27,7 @@ data class DeepMergeSimpleModel(
 }
 
 @CrossboxModel(merge = false)
-@CrossboxRsqlFilter
+@CrossboxRsqlFilter(commonRegistry = true)
 data class DeepRsqlModel(
     val commonId: Long? = null,
     val children: List<SimpleModel>? = null,

@@ -2,7 +2,6 @@ package com.github.klee0kai.crossbox.tests.table
 
 import com.github.klee0kai.crossbox.example.*
 import com.github.klee0kai.crossbox.example.crossbox.JoineryRegistry
-import com.github.klee0kai.crossbox.tests.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

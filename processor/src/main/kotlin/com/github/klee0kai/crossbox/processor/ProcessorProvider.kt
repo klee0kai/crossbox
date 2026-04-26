@@ -8,6 +8,7 @@ import com.github.klee0kai.crossbox.processor.target.proxy.CrossboxGenInterfaceP
 import com.github.klee0kai.crossbox.processor.target.proxy.CrossboxProxyClassProcessor
 import com.github.klee0kai.crossbox.processor.target.proxy.CrossboxSuspendInterfaceProcessor
 import com.github.klee0kai.crossbox.processor.target.rsql.CrossboxRsqlFilterProcessor
+import com.github.klee0kai.crossbox.processor.target.rsql.CrossboxRsqlFilterRegistryProcessor
 import com.github.klee0kai.crossbox.processor.target.table.CrossboxJoineryDataFrameProcessor
 import com.github.klee0kai.crossbox.processor.target.table.CrossboxJoineryRegistryProcessor
 import com.github.klee0kai.crossbox.processor.target.table.CrossboxTableSawProcessor
@@ -27,6 +28,7 @@ class ProcessorProvider : SymbolProcessorProvider {
                 CrossboxAsyncInterfaceProcessor(),
                 CrossboxProxyClassProcessor(),
                 CrossboxRsqlFilterProcessor(),
+                CrossboxRsqlFilterRegistryProcessor(),
                 CrossboxTableSawProcessor(),
                 CrossboxTableSawRegistryProcessor(),
                 CrossboxJoineryDataFrameProcessor(),

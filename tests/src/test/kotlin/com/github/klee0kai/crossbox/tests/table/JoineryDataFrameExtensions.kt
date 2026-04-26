@@ -1,4 +1,4 @@
-package com.github.klee0kai.crossbox.tests
+package com.github.klee0kai.crossbox.tests.table
 
 import joinery.DataFrame
 
