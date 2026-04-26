@@ -122,6 +122,12 @@ package com.github.klee0kai.crossbox.core
  *    - Strings in RSQL expressions must be enclosed in double quotes
  *    - Special characters require escaping
  *    - When building strings dynamically, use URI encoding for security
+ *
+ * ## Parameters
+ *
+ * @param commonRegistry
+ *    - When `true`: uses a shared registry of filters across the codebase
+ *    - When `false` (default): generates independent filters for each model
  */
 @MustBeDocumented
 @Retention(AnnotationRetention.SOURCE)

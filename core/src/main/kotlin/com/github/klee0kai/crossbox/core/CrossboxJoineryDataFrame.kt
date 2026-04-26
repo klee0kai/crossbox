@@ -146,6 +146,12 @@ package com.github.klee0kai.crossbox.core
  *     }
  *     ```
  *     All annotations work independently and generate different functions.
+ *
+ * ## Parameters
+ *
+ * @param commonRegistry
+ *    - When `true`: uses a shared registry of converters across the codebase
+ *    - When `false` (default): generates independent converters for each model
  */
 @MustBeDocumented
 @Retention(AnnotationRetention.SOURCE)

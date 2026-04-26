@@ -134,6 +134,12 @@ package com.github.klee0kai.crossbox.core
  *    ```kotlin
  *    companion object  // Don't forget!
  *    ```
+ *
+ * ## Parameters
+ *
+ * @param commonRegistry
+ *    - When `true`: uses a shared registry of converters across the codebase
+ *    - When `false` (default): generates independent converters for each model
  */
 @MustBeDocumented
 @Retention(AnnotationRetention.SOURCE)
