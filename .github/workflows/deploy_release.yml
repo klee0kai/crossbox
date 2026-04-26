@@ -3,13 +3,12 @@ name: Deploy Release
 on:
   workflow_dispatch:
   push:
-    branches:
-      - 'release/**'
-      - 'releases/**'
+    tags:
+      - "*"
 
 jobs:
-  publish_maven_local:
-    name: Publish Maven Local
+  publish_github_packages:
+    name: Publish to GitHub Packages
     runs-on: ubuntu-latest
     if: ${{ always() }}
     steps:
@@ -23,12 +22,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Publish maven local
-        run: ./gradlew publishToMavenLocal
-
-      - name: Upload changes artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifacts
-          path: |
-            /home/runner/.m2/repository
+      - name: Publish to GitHub Packages
+        run: ./gradlew publish
+        env:
+          SECRETS_GH_ACTOR: ${{ github.SECRETS_GH_ACTOR }}
+          SECRETS_GH_API_TOKEN: ${{ secrets.SECRETS_GH_API_TOKEN }}

@@ -1,12 +1,8 @@
-name: Deploy Dev Branch
+name: Pull Request
 
 on:
-  push:
-    branches:
-      - 'release/**'
-      - 'releases/**'
-      - 'master'
-      - 'dev'
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   tests:
@@ -24,4 +20,3 @@ jobs:
         run: chmod +x gradlew
       - name: Test with Gradle
         run: ./gradlew check
-
