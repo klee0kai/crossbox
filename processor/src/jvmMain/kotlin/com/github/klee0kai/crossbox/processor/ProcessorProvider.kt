@@ -2,6 +2,7 @@ package com.github.klee0kai.crossbox.processor
 
 import com.github.klee0kai.crossbox.processor.ksp.arch.TargetSymbolProcessor
 import com.github.klee0kai.crossbox.processor.target.model.CrossboxModelProcessor
+import com.github.klee0kai.crossbox.processor.target.model.CrossboxModelRegistryProcessor
 import com.github.klee0kai.crossbox.processor.target.model.CrossboxSerializableProcessor
 import com.github.klee0kai.crossbox.processor.target.proxy.CrossboxAsyncInterfaceProcessor
 import com.github.klee0kai.crossbox.processor.target.proxy.CrossboxGenInterfaceProcessor
@@ -34,6 +35,7 @@ class ProcessorProvider : SymbolProcessorProvider {
                 CrossboxRsqlFilterRegistryProcessor(),
                 CrossboxTableSawRegistryProcessor(),
                 CrossboxJoineryRegistryProcessor(),
+                CrossboxModelRegistryProcessor(),
             ),
             options = environment.options,
             logger = environment.logger,

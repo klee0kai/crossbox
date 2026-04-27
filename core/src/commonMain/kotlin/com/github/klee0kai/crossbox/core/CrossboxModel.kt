@@ -91,6 +91,7 @@ package com.github.klee0kai.crossbox.core
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.CLASS)
 annotation class CrossboxModel(
+    val commonRegistry: Boolean = false,
     val fieldList: Boolean = true,
     val merge: Boolean = true,
     val changes: Boolean = true,
