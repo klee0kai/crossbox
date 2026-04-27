@@ -1,6 +1,6 @@
 [versions]
 
-crossbox = "0.0.3"
+crossbox = "0.0.4"
 
 kotlin = "2.3.20"
 ksp = "2.3.2"
