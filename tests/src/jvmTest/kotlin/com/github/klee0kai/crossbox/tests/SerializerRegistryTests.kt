@@ -6,7 +6,7 @@ import com.github.klee0kai.crossbox.example.CategoryModel
 import com.github.klee0kai.crossbox.example.OrderModel
 import com.github.klee0kai.crossbox.example.ProductModel
 import com.github.klee0kai.crossbox.example.UserModel
-import com.github.klee0kai.crossbox.example.crossbox.serializerRegistry
+import com.github.klee0kai.crossbox.example.crossbox.SerializerRegistry.serializerRegistry
 import kotlinx.serialization.json.Json
 import kotlin.test.*
 import kotlin.test.assertEquals

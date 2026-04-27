@@ -14,9 +14,10 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 import kotlinx.serialization.KSerializer
@@ -56,35 +57,37 @@ class CrossboxSerializableProcessor : TargetSymbolProcessor {
             .mapNotNull { it.containingFile?.packageName?.asString() }
             .findCommonPgk()
 
+        val serializerRegistryClName = ClassName(commonPkg.crossboxPackageName, "SerializerRegistry")
 
         // Generate registry file with all collected serializable classes
-        val fileSpec = genFileSpec(
-            packageName = commonPkg.crossboxPackageName,
-            fileName = "SerializerRegistry"
-        ) {
+        val fileSpec = genFileSpec(serializerRegistryClName.packageName, serializerRegistryClName.simpleName) {
             genLibComment()
 
-            // Generate property with map of serializers
-            genProperty(
-                name = "serializerRegistry",
-                type = Map::class.asClassName()
-                    .parameterizedBy(
-                        KClass::class.asClassName().parameterizedBy(STAR),
-                        KSerializer::class.asClassName().parameterizedBy(STAR)
-                    ),
-                KModifier.PUBLIC
-            ) {
-                genGetter {
-                    addCode("return mapOf(\n")
-                    targetSymbols.forEachKsNode { _, classDecl ->
-                        val className = (classDecl as KSClassDeclaration).toClassName()
-                        addCode(
-                            "%T::class to %T.serializer(),\n",
-                            className,
-                            className
-                        )
+            genObject(serializerRegistryClName) {
+                // Generate property with map of serializers
+                genProperty(
+                    name = "serializerRegistry",
+                    type = Map::class.asClassName()
+                        .parameterizedBy(
+                            KClass::class.asClassName()
+                                .parameterizedBy(WildcardTypeName.producerOf(Any::class.asClassName())),
+                            KSerializer::class.asClassName()
+                                .parameterizedBy(WildcardTypeName.producerOf(Any::class.asClassName()))
+                        ),
+                    KModifier.PUBLIC
+                ) {
+                    genGetter {
+                        addCode("return mapOf(\n")
+                        targetSymbols.forEachKsNode { _, classDecl ->
+                            val className = (classDecl as KSClassDeclaration).toClassName()
+                            addCode(
+                                "%T::class to %T.serializer(),\n",
+                                className,
+                                className
+                            )
+                        }
+                        addCode(")")
                     }
-                    addCode(")")
                 }
             }
         }

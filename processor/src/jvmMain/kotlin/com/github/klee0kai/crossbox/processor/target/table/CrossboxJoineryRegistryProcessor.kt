@@ -69,7 +69,7 @@ class CrossboxJoineryRegistryProcessor : TargetSymbolProcessor {
                     val iterableToDataFrameType = LambdaTypeName.get(
                         receiver = Iterable::class.asClassName().parameterizedBy(tType),
                         parameters = emptyList(),
-                        returnType = CrossboxJoineryDataFrameProcessor.dataFrameClazz,
+                        returnType = dataFrameClazz,
                     )
                     genPrimaryConstructor {
                         addParameter("type", KClass::class.asClassName().parameterizedBy(tType))
